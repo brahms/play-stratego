@@ -18,6 +18,7 @@ class Config extends WithLogging {
   @Bean
   def mongoTemplate(): MongoTemplate = {
     val uri = Play.configuration.getString("mongo.uri").get
+    logger.info("MONGO uri: " + uri)
     val mongoUri = new MongoURI(uri)
     val mongo = new Mongo(mongoUri)
     return new MongoTemplate(mongo, "stratego")
