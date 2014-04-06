@@ -40,6 +40,7 @@ object Global extends WithFilters(LoggingFilter) with WithLogging{
   }
 
   override def onStop(app: Application): Unit = {
+    context.refresh()
     context.stop()
   }
 }
