@@ -14,28 +14,10 @@ import brahms.util.WithLogging
 @ComponentScan
 class Config extends WithLogging{
 
-  def mongoFromUri(uri: String): Mongo = {
-    new Mongo(new MongoURI(uri))
-  }
-
-  @Bean
-  def mongoFactory: MongoFactoryBean = {
-    val bean = new MongoFactoryBean
-    bean.setHost("localhost")
-    bean.setPort(27017)
-    bean
-  }
-
   @Bean
   def mongoTemplate() : MongoTemplate = {
-    var mongo: Mongo = null
-    Play.configuration.getString("mongodb.uri") match {
-      case Some(uri) =>
-        logger.debug("Using mongo uri: "+ uri)
-        mongo = mongoFromUri(uri)
-      case _ =>
-        mongo = mongoFactory.getObject
-    }
+    val uri = Play.configuration.getString("mongo.uri").get
+    val mongo = new Mongo(new MongoURI(uri))
     logger.debug("Got a mongo: " + mongo)
     return new MongoTemplate(mongo, "stratego")
   }

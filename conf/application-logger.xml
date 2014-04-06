@@ -15,6 +15,7 @@
         </encoder>
     </appender>
 
+
     <logger name="controller" level="DEBUG" additivity="false">
         <appender-ref ref="STDOUT" />
         <appender-ref ref="FILE" />
