@@ -21,7 +21,9 @@ class Config extends WithLogging {
     logger.info("MONGO uri: " + uri)
     val mongoUri = new MongoURI(uri)
     val mongo = new Mongo(mongoUri)
-    return new MongoTemplate(mongo, "stratego")
+
+    return new MongoTemplate(mongo, mongoUri.getDatabase, new UserCredentials(mongoUri.getCredentials.getUserName,
+      new String(mongoUri.getCredentials.getPassword)))
   }
 
 }
