@@ -13,25 +13,14 @@ import org.springframework.data.authentication.UserCredentials
 @EnableMongoRepositories
 @Configuration
 @ComponentScan
-class Config extends WithLogging{
+class Config extends WithLogging {
 
   @Bean
-  def mongoTemplate() : MongoTemplate = {
+  def mongoTemplate(): MongoTemplate = {
     val uri = Play.configuration.getString("mongo.uri").get
     val mongoUri = new MongoURI(uri)
-    val mongo = new Mongo()
-
-    logger.debug("Got a mongo: " + mongo)
-    Play.configuration.getString("mongo.pass") match {
-      case Some(pass: String) =>
-        val credentials = new UserCredentials(
-          Play.configuration.getString("mongo.user").get,
-          pass
-        )
-        return new MongoTemplate(mongo, "stratego", credentials)
-      case _ =>
-        return new MongoTemplate(mongo, "stratego")
-    }
+    val mongo = new Mongo(mongoUri)
+    return new MongoTemplate(mongo, "stratego")
   }
 
 }
