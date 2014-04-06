@@ -1,1 +1,1 @@
-web: target/start -Dhttp.port=$PORT -Dmongo.uri=$MONGOHQ_URL
+web: target/universal/stage/bin/play-stratego -Dhttp.port=$PORT -Dmongo.uri=$MONGOHQ_URL
