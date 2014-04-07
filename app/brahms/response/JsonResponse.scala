@@ -4,12 +4,15 @@ import play.api.mvc.{SimpleResult, Request}
 import play.api.mvc.Results._
 import brahms.serializer.{JsonViews, Serializer}
 import play.api.http._
+import play.api.Logger
 
 object JsonResponse {
 
 
   def ok[A, B](obj: A)(implicit request: Request[B]) : SimpleResult= {
-    Ok(Serializer.serializer.writerWithView(JsonViews.public).writeValueAsString(obj))
+    val json = Serializer.serializer.writerWithView(JsonViews.PUBLIC).writeValueAsString(obj)
+    Logger.info(s"Returning: '$json'");
+    Ok(json)
       .withHeaders(HeaderNames.CONTENT_TYPE -> "application/json")
   }
   def ok[B](implicit request: Request[B]) : SimpleResult= {

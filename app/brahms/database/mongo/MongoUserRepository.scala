@@ -14,7 +14,7 @@ import org.springframework.data.mongodb.core.query.Query
 
 
 @Repository
-class MongoUserRepository @Inject() (mongoTemplate: MongoTemplate) extends UserRepository{
+class MongoUserRepository @Inject() (mongoTemplate: MongoTemplate) extends AbstractMongoRepository with UserRepository {
   val USERS = "users"
   override def findByUsername(username: String): Option[User] = {
 

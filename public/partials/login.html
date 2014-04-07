@@ -1,0 +1,23 @@
+<div class="col-sm-8 col-sm-offset-2">
+
+  <form name="loginForm" ng-submit="submitForm(loginForm.$valid)" validate>
+
+      <!-- USERNAME -->
+    <div class="form-group" ng-class="{ 'has-error' : loginForm.username.$invalid && !loginForm.username.$pristine }">
+      <label for="inputUsername">Username</label>
+      <input name="username" ng-model="username" type="text" class="form-control" id="inputUsername" placeholder="Username" required>
+    </div>
+
+      <!-- PASSWORD -->
+    <div class="form-group">
+      <label for="password">Password</label>
+      <input name="password" ng-model="password" type="password" class="form-control" id="password" placeholder="Password" required>
+    </div>
+
+
+    <button type="submit" class="btn btn-primary">Submit</button>
+
+
+  </form>
+
+</div>

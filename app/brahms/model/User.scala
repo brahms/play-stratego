@@ -6,11 +6,24 @@ import brahms.util.WithLogging
 import com.fasterxml.jackson.annotation.JsonView
 import brahms.serializer.JsonViews
 object User extends WithLogging{
+  val USERNAME_PATTERN = "[a-zA-Z][a-zA-Z0-9]{3,10}"
+  val PASSWORD_MIN = 6
   def encryptPassword(password: String): String = {
     val salt = BCrypt.gensalt(10)
     val enc = BCrypt.hashpw(password, salt)
     logger.debug(s"converted $password to $enc")
     enc
+  }
+
+  def validateUsername(username: String) : Boolean = {
+    username.matches(USERNAME_PATTERN)
+  }
+
+  def validatePassword(password: String) : Boolean = {
+    if (password.size >= PASSWORD_MIN)
+      true
+    else
+      false
   }
 }
 

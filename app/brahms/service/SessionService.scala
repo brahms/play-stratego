@@ -11,18 +11,20 @@ import scala.Some
 import scala.concurrent.duration._
 import brahms.requests.AuthenticatedRequest
 
+
+
 @Service
 class SessionService {
-  val serverSideSessionTokenKeyName = "token"
-  val serverSideSessionExpiry = 24 hours
+  val SESSION_TOKEN = "token"
+  val SESSION_EXPIRY = 24 hours
 
   import play.api.Play.current // impliciit app
 
   def startSession[A](user: User, request: Request[A]): AuthenticatedRequest[A] = {
     val state = new ServerSideSessionState()
     state.user = Some(user)
-    val token = ServerSideSessions.create(state, serverSideSessionExpiry)
-    request.session + (serverSideSessionTokenKeyName, token)
+    val token = ServerSideSessions.create(state, SESSION_EXPIRY)
+    request.session + (SESSION_TOKEN, token)
     println(s"XXX startSession token $token")
     AuthenticatedRequest[A](user, token, request)
   }
@@ -35,9 +37,9 @@ class SessionService {
    * authenticate each time.
    */
   def getSession[A](request: Request[A]): Either[Exception, AuthenticatedRequest[A]] = {
-    println("XXX getSession: token->" + request.session.get(serverSideSessionTokenKeyName))
+    println("XXX getSession: token->" + request.session.get(SESSION_TOKEN))
     for {
-      token <- request.session.get(serverSideSessionTokenKeyName).toRight(new NoSessionError).right
+      token <- request.session.get(SESSION_TOKEN).toRight(new NoSessionError).right
       session <- ServerSideSessions.get(token).toRight(new ExpiredSessionError).right
       user <- session.user.toRight(new ExpiredSessionError).right
     } yield AuthenticatedRequest(user, token, request)
@@ -48,8 +50,8 @@ class SessionService {
    * This is invoked to delete any existing server-side session, e.g. when logging out.
    */
   def abandonSession[A](request: Request[A]): Request[A] = {
-    println("XXX abandonSession: "+request.session.get(serverSideSessionTokenKeyName))
-    request.session.get(serverSideSessionTokenKeyName).map(ServerSideSessions.delete)
+    println("XXX abandonSession: "+request.session.get(SESSION_TOKEN))
+    request.session.get(SESSION_TOKEN).map(ServerSideSessions.delete)
     request
   }
 }

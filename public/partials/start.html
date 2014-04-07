@@ -1,0 +1,40 @@
+<!-- Shown if not logged in -->
+<div ng-show="!loggedIn" class="jumbotron">
+    <h1>Welcome to Play-Stratego</h1>
+    <p class="lead">Welcome! This is a web application written in Scala on the backend and Coffescript on the frontend to allow you to play the game Stratego. Please sign in!</p>
+    <p>
+        <a class="btn btn-lg btn-success" href="/app/signup" role="button">Sign up today</a>
+
+        <div style="clear:both" />
+        <a class="" href="/app/login">Already have an account? Login in!</a>
+    </p>
+</div>
+
+
+<!-- Shown if Logged in -->
+<div ng-controller="GameListCtrl" ng-show="loggedIn">
+
+    <h4>Games</h4>
+
+    <div class="games-list">
+
+        <div class="row game" ng-repeat="game in shownGames | limitTo: totalGames" class="list-group-item">
+
+            <div style="float: left;" class="left">
+            <img  style="float: left;" class="img-rounded" alt="140x140" src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxNDAiIGhlaWdodD0iMTQwIj48cmVjdCB3aWR0aD0iMTQwIiBoZWlnaHQ9IjE0MCIgZmlsbD0iI2VlZSI+PC9yZWN0Pjx0ZXh0IHRleHQtYW5jaG9yPSJtaWRkbGUiIHg9IjcwIiB5PSI3MCIgc3R5bGU9ImZpbGw6I2FhYTtmb250LXdlaWdodDpib2xkO2ZvbnQtc2l6ZToxMnB4O2ZvbnQtZmFtaWx5OkFyaWFsLEhlbHZldGljYSxzYW5zLXNlcmlmO2RvbWluYW50LWJhc2VsaW5lOmNlbnRyYWwiPjE0MHgxNDA8L3RleHQ+PC9zdmc+" style="width: 140px; height: 140px;">
+                <div>Name: </div>
+                <p style="float: left;" class="name">{{game.name}}</p>
+            </div>
+
+
+            <div style="float: left;"  class="right">
+                <a href="#">PLAY</a>
+            </div>
+            <div style="clear:both"/>
+        </div>
+
+
+    </div>
+    <!-- Pagination -->
+    <pagination class="dontselect" max-size="limitPages" items-per-page="gamesPerPage" boundary-links="true" total-items="totalGames" page="currentPage"></pagination>
+</div>

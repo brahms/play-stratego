@@ -5,10 +5,16 @@ import javax.inject.{Singleton, Named, Inject}
 import brahms.response.JsonResponse
 import brahms.requests.AuthenticatedRequest
 import play.api.mvc.Action
+import play.api.mvc.BodyParsers._
+import brahms.database.UserRepository
+import brahms.model.User
 
 @Named
 @Singleton
 class UserController extends AbstractController {
+
+  @Inject
+  var userRepo: UserRepository = _
 
   def users = Authenticated.text {
     implicit r: AuthenticatedRequest[String] =>
@@ -17,8 +23,16 @@ class UserController extends AbstractController {
       }
   }
 
-  def noauth = Action {
+  def isUsernameUnique = Action.async(parse.json) {
     implicit r =>
-      JsonResponse.ok("hi")
+      val username = (r.body \ "username").as[String]
+      async {
+        userRepo.findByUsername(username) match {
+          case Some(_)  =>
+            JsonResponse.ok(Map("status" -> false))
+          case _ =>
+            JsonResponse.ok(Map("status" -> true))
+        }
+      }
   }
 }

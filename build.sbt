@@ -25,6 +25,8 @@ libraryDependencies ++= Seq(
 
 play.Project.playScalaSettings
 
+scalacOptions ++= Seq("-feature", "-language:postfixOps")
+
 resolvers += "SpringSource Milestone Repository" at "http://repo.springsource.org/milestone"
 
 resolvers += "Sonatype snapshots" at "http://oss.sonatype.org/content/repositories/snapshots/"

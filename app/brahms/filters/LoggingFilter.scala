@@ -18,6 +18,7 @@ object LoggingFilter extends Filter {
         Logger.info(s"${requestHeader.method} ${requestHeader.uri} thru ${action} took ${requestTime}ms" +
           s" and returned ${result.header.status}")
         result.withHeaders("Request-Time" -> requestTime.toString)
+
       }
       else
         result

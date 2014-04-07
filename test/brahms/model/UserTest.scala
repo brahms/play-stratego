@@ -4,6 +4,7 @@ import org.scalatest.FunSuite
 import play.api.test.FakeApplication
 import brahms.test.WithTestExtras
 import brahms.serializer.{JsonViews, Serializer}
+import scala.xml.Utility
 
 class UserTest extends FunSuite with WithTestExtras {
   test("encryptPassword") {
@@ -26,8 +27,23 @@ class UserTest extends FunSuite with WithTestExtras {
     assertResult(user.isAdmin)(newUser.isAdmin)
     assertResult(user.getUsername)(newUser.getUsername)
 
-    println(Serializer.serializer.writerWithView(JsonViews.public).writeValueAsString(user))
+    println(Serializer.serializer.writerWithView(JsonViews.PUBLIC).writeValueAsString(user))
 
   }
 
+  test("regex") {
+    val username = "should12"
+    assert(User.validateUsername(username))
+    val bad = "1abc32"
+    assert(!User.validateUsername(bad))
+  }
+
+  test("htmlencode") {
+    val user = new User
+    user.setPassword("bla")
+    user.setAdmin(true)
+    user.setId("12345")
+
+    println(Utility.escape(Serializer.serializer.writerWithView(JsonViews.PUBLIC).writeValueAsString(user)))
+  }
 }

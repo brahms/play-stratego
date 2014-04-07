@@ -5,6 +5,6 @@ object JsonViews {
   trait Public
   trait Private extends Public
 
-  val public = classOf[Public]
-  val priv = classOf[Private]
+  val PUBLIC = classOf[Public]
+  val PRIVATE = classOf[Private]
 }

@@ -1,7 +1,85 @@
-@(message: String)
+@(userJson: String)
 
-@main("Welcome to Play") {
+<!DOCTYPE html>
+<html lang="en" ng-app="app">
 
-    @play20.welcome(message)
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Play-Stratego</title>
 
-}
+    <!-- Bootstrap -->
+    <link href="@routes.Assets.at("css/bootstrap.min.css")" rel="stylesheet">
+    <!-- Bootstrap -->
+    <link href="@routes.Assets.at("css/jumbotron.css")" rel="stylesheet">
+    <link href="@routes.Assets.at("css/app.css")" rel="stylesheet">
+
+    <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
+    <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+    <!--[if lt IE 9]>
+    <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+    <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+    <![endif]-->
+</head>
+
+<body 
+    ng-controller="MainCtrl" 
+    data-user="@userJson"
+    data-assets-path="@routes.Assets.at("")">
+    
+    <div class="container">
+        <div class="header">
+            <ul class="nav nav-pills pull-right">
+                <li><a href="/app">Home</a>
+                </li>
+                <li><a href="/app/about">About</a>
+                </li>
+                <li ng-show="!loggedIn">
+                    <a href="/app/login">Login</a>
+                </li>
+                <li ng-show="loggedIn">
+                    <a ng-click="logout">Logout</a>
+                </li>
+            </ul>
+            <h3 class="text-muted">Play-Stratego</h3>
+        </div>
+        <div ng-view></div>
+
+    <div style="clear:both"/>
+    <br>
+    <pre>$location.path() = {{$location.path()}}</pre>
+    <pre>$route.current.templateUrl = {{$route.current.templateUrl}}</pre>
+    <pre>$route.current.params = {{$route.current.params}}</pre>
+    <pre>$route.current.scope.ctrl = {{$route.current.scope.ctrl}}</pre>
+    <pre>$routeParams = {{$routeParams}}</pre>
+    </div>
+    <pre>user = {{user.username}}</pre>
+    </div>
+    <div class="footer">
+        <p>© Chris Brahms 2014</p>
+    </div>
+    <!-- /container -->
+
+    <!-- Bootstrap core JavaScript
+    ================================================== -->
+    <!-- Placed at the end of the document so the pages load faster -->
+
+    <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js"></script>
+    <!-- Include all compiled plugins (below), or include individual files as needed -->
+    <script src="@routes.Assets.at("js/lib/bootstrap.min.js")"></script>
+    <script src="@routes.Assets.at("js/lib/angular/angular.js")"></script>
+    <script src="@routes.Assets.at("js/lib/angular/angular-route.js")"></script>
+    <script src="@routes.Assets.at("js/lib/angular/ui-bootstrap-tpls-0.10.0.js")"></script>
+
+    <script src="@routes.Assets.at("js/app.js")"></script>
+    <script src="@routes.Assets.at("js/services.js")"></script>
+    <script src="@routes.Assets.at("js/controllers.js")"></script>
+    <script src="@routes.Assets.at("js/filters.js")"></script>
+    <script src="@routes.Assets.at("js/directives.js")"></script>
+
+</body>
+
+
+</html>
