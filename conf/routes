@@ -13,6 +13,7 @@ GET     /assets/*file               controllers.Assets.at(path="/public", file)
 
 POST     /api/login                 @controllers.api.AuthController.login
 POST     /api/logout                @controllers.api.AuthController.logout
+POST     /api/signup                @controllers.api.AuthController.signup
 
 # Users
 GET     /api/users                  @controllers.api.UserController.users

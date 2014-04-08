@@ -29,22 +29,8 @@
     data-assets-path="@routes.Assets.at("")">
     
     <div class="container">
-        <div class="header">
-            <ul class="nav nav-pills pull-right">
-                <li><a href="/app">Home</a>
-                </li>
-                <li><a href="/app/about">About</a>
-                </li>
-                <li ng-show="!loggedIn">
-                    <a href="/app/login">Login</a>
-                </li>
-                <li ng-show="loggedIn">
-                    <a ng-click="logout">Logout</a>
-                </li>
-            </ul>
-            <h3 class="text-muted">Play-Stratego</h3>
-        </div>
-        <div ng-view></div>
+        <ng-include src="templateUrls.navbar"></ng-include>
+        <ng-view></ng-view>
 
     <div style="clear:both"/>
     <br>
@@ -55,9 +41,9 @@
     <pre>$routeParams = {{$routeParams}}</pre>
     </div>
     <pre>user = {{user.username}}</pre>
-    </div>
     <div class="footer">
         <p>© Chris Brahms 2014</p>
+    </div>
     </div>
     <!-- /container -->
 
@@ -72,12 +58,19 @@
     <script src="@routes.Assets.at("js/lib/angular/angular.js")"></script>
     <script src="@routes.Assets.at("js/lib/angular/angular-route.js")"></script>
     <script src="@routes.Assets.at("js/lib/angular/ui-bootstrap-tpls-0.10.0.js")"></script>
+    <script src="@routes.Assets.at("js/lib/angular/ui-utils.js")"></script>
+    <script src="@routes.Assets.at("js/lib/EventEmitter.min.js")"></script>
+    <script src="@routes.Assets.at("js/lib/kinetic.min.js")"></script>
 
     <script src="@routes.Assets.at("js/app.js")"></script>
     <script src="@routes.Assets.at("js/services.js")"></script>
     <script src="@routes.Assets.at("js/controllers.js")"></script>
     <script src="@routes.Assets.at("js/filters.js")"></script>
     <script src="@routes.Assets.at("js/directives.js")"></script>
+    <script src="@routes.Assets.at("js/stratego.js")"></script>
+    <script src="@routes.Assets.at("js/stratego/board.js")"></script>
+    <script src="@routes.Assets.at("js/stratego/piece.js")"></script>
+    <script src="@routes.Assets.at("js/stratego/square.js")"></script>
 
 </body>
 

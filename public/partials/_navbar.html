@@ -1,0 +1,20 @@
+<div class="header dontselect">
+            <ul class="nav nav-pills pull-right">
+                <li ng-class="{active: isActive('/app')}"><a ng-href="/app">Play</a>
+                </li>
+                <li ng-class="{active: isActive('/app/history')}" ng-show="loggedIn">
+                    <a ng-href="/app/history">History</a>
+                </li>
+                <li ng-class="{active: isActive('/app/about')}"><a ng-href="/app/about">About</a>
+                </li>
+                <li ng-class="{active: isActive('/app/admin')}" ng-show="loggedIn && user.admin"><a ng-href="/app/admin">Admin</a>
+                </li>
+                <li ng-class="{active: isActive('/app/login')}" ng-show="!loggedIn">
+                    <a ng-href="/app/login">Login</a>
+                </li>
+                <li  ng-show="loggedIn">
+                    <a ng-click="logout()">Logout</a>
+                </li>
+            </ul>
+    <h3 class="text-muted">Play-Stratego</h3>
+</div>

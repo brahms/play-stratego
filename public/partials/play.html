@@ -1,0 +1,22 @@
+<!-- Shown if not logged in -->
+<div ng-show="!loggedIn" class="jumbotron">
+    <h1>Welcome to Play-Stratego</h1>
+    <p class="lead">Welcome! This is a web application written in Scala on the backend and Coffescript on the frontend to allow you to play the game Stratego. Please sign up to play!</p>
+    <p>
+        <a class="btn btn-lg btn-success" href="/app/signup" role="button">Sign up today</a>
+
+        <div style="clear:both" />
+        <a class="" href="/app/login">Already have an account? Login in!</a>
+    </p>
+</div>
+
+<tabset ng-show="loggedIn">
+        <tab heading="Games">
+            <ng-include src="templateUrls.gamesList">
+            </ng-include>
+        </tab>
+        <tab heading="Current Game">
+            <ng-include src="templateUrls.currentGame">
+            </ng-include>
+        </tab>
+</tabset>

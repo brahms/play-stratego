@@ -10,6 +10,7 @@ import play.api.libs.json.JsValue
 import brahms.model.User
 import org.springframework.validation.{ValidationUtils, Errors, Validator}
 import brahms.database.UserRepository
+import scala.beans.BeanProperty
 
 @Named
 @Singleton
@@ -85,7 +86,7 @@ class AuthController extends AbstractController  {
   }
 
 
-  private case class LoginRequest(val username: String, val password: String)
+  private case class LoginRequest(@BeanProperty  username: String, @BeanProperty password: String)
   private object LoginRequestValidator extends Validator {
     override def supports(clazz: Class[_]): Boolean = {
       classOf[LoginRequest].equals(clazz)
