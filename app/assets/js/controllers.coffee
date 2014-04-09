@@ -116,7 +116,11 @@ angular.module('app.controllers', ['ngRoute', 'app.stratego'])
             constructor: (scope, log, http, StrategoFactory) ->
                 scope.ctrl = "CurrentGameCtrl"
                 scope.liveGame = false
-
+                angular.element('canvas').ready ( ->
+                    @model = new StrategoFactory.StrategoModel(1, USER)
+                    @controller = new StrategoFactory.StrategoController(@model)
+                    @view = new StrategoFactory.StrategoView(@model, @controller, 'canvas')
+                )
                 scope.createGame = ->
                     log.debug("Creating game")
                     http({
@@ -129,9 +133,6 @@ angular.module('app.controllers', ['ngRoute', 'app.stratego'])
                         scope.liveGame = true
                         scope.gameId = data.gameId
                         log.debug("Created game with id: " + data.gameId)
-                        model = StrategoFactory.createModel(scope.gameId, USER)
-                        controller = StrategoFactory.createController(model)
-                        view = StrategoFactory.createView(model, controller, 'canvas')
                         
 
                     ).error(->

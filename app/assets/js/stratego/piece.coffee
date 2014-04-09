@@ -1,6 +1,6 @@
-angular.module('app.stratego.piece', [])
-    .factory('StrategoPiece', ['$log', 
-(log) ->              
+angular.module('app.stratego.piece', ['app.stratego.functions'])
+    .factory('StrategoPiece', ['$log', 'StrategoFunctions',
+(log, StrategoFunctions) ->        
     imagesPromises = []
 
     images = {}

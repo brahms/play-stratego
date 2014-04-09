@@ -11,12 +11,12 @@
 </div>
 
 <tabset ng-show="loggedIn">
-        <tab heading="Games">
-            <ng-include src="templateUrls.gamesList">
-            </ng-include>
-        </tab>
         <tab heading="Current Game">
             <ng-include src="templateUrls.currentGame">
+            </ng-include>
+        </tab>
+        <tab heading="Games">
+            <ng-include src="templateUrls.gamesList">
             </ng-include>
         </tab>
 </tabset>

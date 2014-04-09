@@ -1,6 +1,7 @@
-angular.module('app.stratego.square', [])
-    .factory('StrategoSquare', ['$log', 
-(log) ->
+angular.module('app.stratego.square', ['app.stratego.functions'])
+    .factory('StrategoSquare', ['$log', 'StrategoFunctions', 
+(log, StrategoFunctions) ->
+    {SQUARE_WIDTH, SQUARE_HEIGHT, squareToXy} = StrategoFunctions
     class StrategoSquare
         constructor: (@x, @y, @game, @layer) ->
             {x,y} = squareToXy @x, @y
@@ -26,6 +27,5 @@ angular.module('app.stratego.square', [])
         click: =>
             log.debug "Click #{@}"
         toString: =>
-            piece = @game.getPiece(@x, @y)
-            return "StrategoSquare[#{@x}/#{@y}, Piece: #{piece}]";
+            "StrategoSquare[#{@x}/#{@y}]";
 ])
