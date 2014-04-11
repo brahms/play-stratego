@@ -20,3 +20,11 @@ POST     /api/signup                @controllers.api.AuthController.signup
 GET     /api/users                  @controllers.api.UserController.users
 POST    /api/validate/username      @controllers.api.UserController.isUsernameUnique
 
+#Game
+GET     /games                       @controllers.api.GameController.getGames
+GET     /games/:id                   @controllers.api.GameController.getGameState(id)
+POST    /games/:id/action            @controllers.api.GameController.invokeAction(id)
+POST    /games/:id/join              @controllers.api.GameController.join(id)
+POST    /games/create                @controllers.api.GameController.createGame
+
+

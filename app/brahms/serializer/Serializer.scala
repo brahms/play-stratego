@@ -25,6 +25,7 @@ object Serializer {
       .withSetterVisibility(JsonAutoDetect.Visibility.NONE)
       .asInstanceOf[VisibilityChecker[_]]
     )
+    o.configure(SerializationFeature.INDENT_OUTPUT, true)
     o
   }
 

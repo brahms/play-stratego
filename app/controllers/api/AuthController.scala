@@ -1,7 +1,7 @@
 package controllers.api
 
 import javax.inject.{Inject, Singleton, Named}
-import play.api.mvc.{Request, Action}
+import play.api.mvc.{SimpleResult, Request, Action}
 import play.api.mvc.BodyParsers._
 import brahms.util.AbstractController
 import brahms.response.JsonResponse
@@ -11,18 +11,22 @@ import brahms.model.User
 import org.springframework.validation.{ValidationUtils, Errors, Validator}
 import brahms.database.UserRepository
 import scala.beans.BeanProperty
+import scala.concurrent.Future
 
 @Named
 @Singleton
-class AuthController extends AbstractController  {
+class AuthController extends AbstractController {
 
   @Inject
   var userRepo: UserRepository = _
 
-  def login = Action.async(parse.json) {
-      implicit r =>
-        val username = (r.body \ "username").as[String]
-        val password = (r.body \ "password").as[String]
+  def login: Action[JsValue]= Action.async(parse.json) {
+    implicit r =>
+      val username = (r.body \ "username").as[String]
+      val password = (r.body \ "password").as[String]
+
+      if (User.validateUsername(username) &&
+          User.validatePassword(password)){
         async {
           authService.authenticate(username, password) match {
             case Some(user) =>
@@ -39,7 +43,14 @@ class AuthController extends AbstractController  {
               JsonResponse.bad("Invalid login")
           }
         }
-    }
+      }
+      else {
+        skipAsync(JsonResponse.bad("Invalid username/password passed in"))
+      }
+
+
+  }
+
   def logout = Action {
     implicit r =>
       sessionService.getSession(r) match {
@@ -82,11 +93,13 @@ class AuthController extends AbstractController  {
                 validationError
             }
         }
+
       }
   }
 
 
-  private case class LoginRequest(@BeanProperty  username: String, @BeanProperty password: String)
+  private case class LoginRequest(@BeanProperty username: String, @BeanProperty password: String)
+
   private object LoginRequestValidator extends Validator {
     override def supports(clazz: Class[_]): Boolean = {
       classOf[LoginRequest].equals(clazz)
@@ -102,16 +115,18 @@ class AuthController extends AbstractController  {
         }
       }
       if (errors.hasErrors == false) {
-        userRepo.findByUsername(req.username).map { _ =>
-          errors.rejectValue("username", "unique", "Username is already taken")
+        userRepo.findByUsername(req.username).map {
+          _ =>
+            errors.rejectValue("username", "unique", "Username is already taken")
         }
       }
 
       if (errors.hasErrors == false) {
-        if(!User.validatePassword(req.password)) {
+        if (!User.validatePassword(req.password)) {
           errors.rejectValue("password", "invalid", s"Must be at least ${User.PASSWORD_MIN} characters")
         }
       }
     }
   }
+
 }

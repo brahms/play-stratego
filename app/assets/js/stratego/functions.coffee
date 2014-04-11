@@ -10,7 +10,7 @@ angular.module("app.stratego.functions", [])
     squareToXy = (x,y) ->
         {
             x: SQUARE_X_OFFSET+((x-1)*SQUARE_WIDTH)
-            y: SQUARE_Y_OFFSET+((y-1)*SQUARE_HEIGHT)
+            y: SQUARE_Y_OFFSET+((10-y)*SQUARE_HEIGHT)
         } 
 
     {

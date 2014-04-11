@@ -8,6 +8,7 @@ import brahms.serializer.JsonViews
 object User extends WithLogging{
   val USERNAME_PATTERN = "[a-zA-Z][a-zA-Z0-9]{3,10}"
   val PASSWORD_MIN = 6
+  val PASSWORD_MAX = 100
   def encryptPassword(password: String): String = {
     val salt = BCrypt.gensalt(10)
     val enc = BCrypt.hashpw(password, salt)
@@ -20,7 +21,7 @@ object User extends WithLogging{
   }
 
   def validatePassword(password: String) : Boolean = {
-    if (password.size >= PASSWORD_MIN)
+    if (password.size >= PASSWORD_MIN && password.size < PASSWORD_MAX)
       true
     else
       false
@@ -51,4 +52,22 @@ class User {
   override def toString: String = {
     s"User(id: $id, username: $username, password: $password, admin: $admin)"
   }
+
+  def toSimpleUser: User = {
+    val user = new User
+    user.setId(id)
+    user.setUsername(username)
+    user
+  }
+
+  override def equals(obj: scala.Any): Boolean = {
+    obj match {
+      case user: User if user.getUsername.equals(getUsername) =>
+        true
+      case _ =>
+        false
+    }
+
+  }
+
 }

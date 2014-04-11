@@ -16,6 +16,7 @@ import brahms.requests.AuthenticatedRequest
 import play.api.mvc.SimpleResult
 import brahms.serializer.{JsonViews, Serializer}
 
+import scala.concurrent.Future
 object AbstractController {
   val context: ExecutionContext = ExecutionContext.fromExecutor(Executors.newFixedThreadPool(50))
 }
@@ -89,4 +90,6 @@ class AbstractController extends Controller with WithLogging {
       Right(obj)
     }
   }
+
+  def skipAsync[T](result: T): Future[T] = Future.successful(result)
 }
