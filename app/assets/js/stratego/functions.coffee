@@ -2,10 +2,10 @@ angular.module("app.stratego.functions", [])
     .factory('StrategoFunctions', ['$log', 
 (log) ->
 
-    SQUARE_X_OFFSET = 20
-    SQUARE_Y_OFFSET = 135
-    SQUARE_WIDTH = 48
-    SQUARE_HEIGHT = 45
+    SQUARE_X_OFFSET = 19
+    SQUARE_Y_OFFSET = 115
+    SQUARE_WIDTH = 40
+    SQUARE_HEIGHT = 39
 
     squareToXy = (x,y) ->
         {

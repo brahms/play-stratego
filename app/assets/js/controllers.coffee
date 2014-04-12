@@ -35,8 +35,9 @@ angular.module('app.controllers', ['ngRoute', 'app.stratego'])
     ])
     .controller('PlayCtrl', ['$scope',
         class PlayCtrl
-            constructor: ($scope) ->
-                $scope.ctrl = 'PlayCtrl'
+            constructor: (scope) ->
+                scope.ctrl = 'PlayCtrl'
+                scope.currentGame=true
     ])
     .controller('SignupCtrl', ['$scope', '$log', '$http'
         class SignupCtrl
@@ -117,9 +118,11 @@ angular.module('app.controllers', ['ngRoute', 'app.stratego'])
                 scope.ctrl = "CurrentGameCtrl"
                 scope.liveGame = false
                 angular.element('canvas').ready ( ->
-                    @model = new StrategoFactory.StrategoModel(1, USER)
-                    @controller = new StrategoFactory.StrategoController(@model)
-                    @view = new StrategoFactory.StrategoView(@model, @controller, 'canvas')
+                    @controller = new StrategoFactory.StrategoController()
+                    @board = new StrategoFactory.StrategoBoard('canvas')
+                    @board.init()
+                    @controller.registerBoard(@board)
+                    @board.registerController(@controller)
                 )
                 scope.createGame = ->
                     log.debug("Creating game")
