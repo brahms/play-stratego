@@ -87,29 +87,6 @@ angular.module('app.stratego.pieces', ['app.stratego.functions'])
     StrategoPiece.UNKNOWN = 13
 
 
-    for i in [StrategoPiece.MINVAL .. StrategoPiece.MAXVAL]
-        rdefer = $.Deferred()
-        bdefer = $.Deferred()
-        bkey = "b#{i}"
-        rkey = "r#{i}"
-        bimage = new Image()
-        bimage.onload = ->
-            bdefer.resolve()
-        rimage = new Image()
-        rimage.onload = ->
-            rdefer.resolve()
-
-        bimage.src = "#{ASSETS}images/stratego/#{bkey}.png"
-        rimage.src = "#{ASSETS}images/stratego/#{rkey}.png"
-
-        images[rkey] = rimage
-        images[bkey] = bimage
-
-        imagesPromises.push rdefer.promise()
-        imagesPromises.push bdefer.promise()
-
-    StrategoPiece.isLoadedPromise = $.when(imagesPromises)
-
     return {
         StrategoPiece: StrategoPiece
         BluePiece: BluePiece

@@ -4,7 +4,8 @@ angular.module('app.stratego', [
     'app.stratego.square',
     'app.stratego.functions',
     'app.stratego.actions',
-    'app.stratego.controller'
+    'app.stratego.controller',
+    'app.stratego.sideboards'
 ]).factory('StrategoFactory', [
     '$log', 
     '$http', 

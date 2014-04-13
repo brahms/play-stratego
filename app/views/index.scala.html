@@ -32,15 +32,15 @@
         <ng-include src="templateUrls.navbar"></ng-include>
         <ng-view></ng-view>
 
-    <div style="clear:both"/>
+        <div style="clear:both"/>
     <br>
-    <pre>$location.path() = {{$location.path()}}</pre>
+<!--    <pre>$location.path() = {{$location.path()}}</pre>
     <pre>$route.current.templateUrl = {{$route.current.templateUrl}}</pre>
     <pre>$route.current.params = {{$route.current.params}}</pre>
     <pre>$route.current.scope.ctrl = {{$route.current.scope.ctrl}}</pre>
-    <pre>$routeParams = {{$routeParams}}</pre>
+    <pre>$routeParams = {{$routeParams}}</pre> -->
+        <pre>user = {{user.username}}</pre>
     </div>
-    <pre>user = {{user.username}}</pre>
     <div class="footer">
         <p>© Chris Brahms 2014</p>
     </div>
@@ -74,6 +74,7 @@
     <script src="@routes.Assets.at("js/stratego/functions.js")"></script>
     <script src="@routes.Assets.at("js/stratego/actions.js")"></script>
     <script src="@routes.Assets.at("js/stratego/controller.js")"></script>
+    <script src="@routes.Assets.at("js/stratego/sideboards.js")"></script>
 
 </body>
 

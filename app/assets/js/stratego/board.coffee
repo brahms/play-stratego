@@ -1,23 +1,22 @@
-angular.module('app.stratego.board', ['app.stratego.square', 'app.stratego.pieces', 'app.stratego.functions'])
-    .factory('StrategoBoard', ['$log', 'StrategoSquare', 'StrategoFunctions', 'StrategoPieces',
-(log, StrategoSquare, StrategoFunctions, StrategoPieces) ->
+angular.module('app.stratego.board', ['app.stratego.square', 
+    'app.stratego.pieces', 
+    'app.stratego.functions',
+    'app.stratego.sideboards'])
+.factory('StrategoBoard', ['$log', 
+    'StrategoSquare', 
+    'StrategoFunctions', 
+    'StrategoPieces',
+    'StrategoSideboards'
+(log, StrategoSquare, StrategoFunctions, StrategoPieces, StrategoSideboards) ->
     Boundary = -1
     Empty = 0
     {StrategoPiece, BluePiece, RedPiece} = StrategoPieces
     {SQUARE_WIDTH, SQUARE_HEIGHT, squareToXy} = StrategoFunctions
+    {RedSideboard, BlueSideboard} = StrategoSideboards
+
 
     class StrategoBoard
         constructor: (@canvas) ->
-        registerController: (@ctrl) ->
-            log.debug "Ctrl registered: #{@ctrl}"
-        init: ->
-            log.debug "Creating board at element: #{@canvas}"
-            stage = new Kinetic.Stage({
-                            container: @canvas
-                            height: 600
-                            width: 700
-                })
-            @stage = stage
             @matrix = [
                 [-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1] #x=0
                 [-1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,-1] #x=1
@@ -34,6 +33,16 @@ angular.module('app.stratego.board', ['app.stratego.square', 'app.stratego.piece
             ]   #y0 y1 y2 y3 y4 y5 y6 y7 y8 y9 y10 y11
 
 
+        registerController: (@ctrl) ->
+            log.debug "Ctrl registered: #{@ctrl}"
+        init: (isRed) ->
+            log.debug "Creating board at element: #{@canvas}"
+            stage = new Kinetic.Stage({
+                            container: @canvas
+                            height: 600
+                            width: 700
+                })
+            @stage = stage
             backgroundLayer = new Kinetic.Layer()    
             @offsetx = (@stage.getWidth() / 2) - (525/2)
 
@@ -52,18 +61,31 @@ angular.module('app.stratego.board', ['app.stratego.square', 'app.stratego.piece
                 }
                 backgroundLayer.add bgImage
                 @stage.add backgroundLayer
+                
                 bgImage.on 'mousemove', () ->
-                    x = stage.getPointerPosition().x - bgImage.getPosition().x;
-                    y = stage.getPointerPosition().y - bgImage.getPosition().y;
-                    # log.debug x + "/" + y
+                    x = stage.getPointerPosition().x #- bgImage.getPosition().x;
+                    y = stage.getPointerPosition().y #- bgImage.getPosition().y;
+                    log.debug x + "/" + y
+
                 squaresLayer = new Kinetic.Layer()
                 for x in [1..10]
                     for y in [1..10]
                         if (@matrix[x][y] == Empty)
                             @matrix[x][y] = new StrategoSquare(x, y, @, squaresLayer)
-                stage.add squaresLayer
+                stage.add(squaresLayer)
+
                 @matrix[1][10].initPiece(new BluePiece(StrategoPiece.MINER, @))
                 @matrix[3][10].initPiece(new BluePiece(StrategoPiece.UNKNOWN, @))
+
+                @redSideboard = new RedSideboard(isRed, @)
+                @blueSideboard = new BlueSideboard(!isRed, @)
+
+                sideboardLayer = new Kinetic.Layer()
+
+                @redSideboard.addToLayer(sideboardLayer)
+                @blueSideboard.addToLayer(sideboardLayer)
+
+                stage.add(sideboardLayer)
 
         placePiece: (piece, x, y) ->
         killPiece: (piece, x, y) -> 
