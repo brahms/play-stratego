@@ -42,5 +42,20 @@ class StrategoGameTest extends FunSuite {
 
   }
 
+  test("boundaryInPath") {
+    val game = new StrategoGame
+    game.setRedPlayer(new User)
+    game.setBluePlayer(new User)
+    game.init
+    assert(game.boundaryInPath(3,1,3,10))
+    assert(!game.boundaryInPath(1,1,1,10))
+    assert(game.boundaryInPath(1,5,10,5))
+
+    // lets go reverse
+    assert(game.boundaryInPath(3,10, 3, 1))
+    assert(!game.boundaryInPath(1,10, 1, 1))
+    assert(game.boundaryInPath(10,5, 1, 5))
+  }
+
 
 }

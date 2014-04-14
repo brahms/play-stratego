@@ -2,23 +2,29 @@ package brahms.model.stratego
 
 import brahms.model.stratego.StrategoType.DeathType.DeathType
 import brahms.util.WithLogging
-import com.fasterxml.jackson.annotation.JsonIgnore
+import com.fasterxml.jackson.annotation._
+import com.fasterxml.jackson.annotation.JsonSubTypes.Type
+import scala.annotation.meta.{getter, param}
+import scala.beans
+import scala.beans.BeanProperty
 
 object StrategoType extends WithLogging {
-  val SPY = 1
-  val SCOUT = 2
-  val MINER = 3
-  val SERGENT = 4
-  val LIEUTENANT = 5
-  val CAPTAIN = 6
-  val MAJOR = 7
-  val COLONEL = 8
-  val GENERAL = 9
-  val MARSHAL = 10
-  val BOMB  = 11
-  val FLAG = 12
-  val MINVAL = SPY
-  val MAXVAL = FLAG
+  val SPY_1 = 1
+  val SCOUT_2 = 2
+  val MINER_3 = 3
+  val SERGENT_4 = 4
+  val LIEUTENANT_5 = 5
+  val CAPTAIN_6 = 6
+  val MAJOR_7 = 7
+  val COLONEL_8 = 8
+  val GENERAL_9 = 9
+  val MARSHAL_10 = 10
+  val BOMB_11  = 11
+  val FLAG_12 = 12
+  val UNKNOWN_13 = 13
+  val MINVAL = SPY_1
+  val MAXVAL = FLAG_12
+
 
   object DeathType extends Enumeration {
     type DeathType = Value
@@ -40,15 +46,22 @@ object StrategoType extends WithLogging {
   }
 
 
-  abstract class StrategoPiece(val value: Int) extends StrategoType {
+
+  @JsonTypeInfo(use=JsonTypeInfo.Id.NAME, include=JsonTypeInfo.As.PROPERTY, property="type")
+  @JsonSubTypes(Array(new Type(value=classOf[BluePiece], name="BluePiece"),
+    new Type(value=classOf[RedPiece], name="RedPiece")
+  ))
+  abstract class StrategoPiece (constructorValue: Int) extends StrategoType {
+      @BeanProperty
+      var value: Int = constructorValue
       override def toShortHand: String = value match {
-        case value if value == FLAG =>
+        case value if value == FLAG_12 =>
           s"${char}FL"
-        case value if value == BOMB =>
+        case value if value == BOMB_11 =>
           s"${char}BO"
-        case value if value == SPY =>
+        case value if value == SPY_1 =>
           s"${char}SP"
-        case value if value == MINER =>
+        case value if value == MINER_3 =>
           s"${char}MI"
         case value if value >= 10 =>
           s"$char$value"
@@ -59,12 +72,22 @@ object StrategoType extends WithLogging {
     @JsonIgnore
     def isValid: Boolean = {
       value match {
-        case value if value > FLAG =>
+        case value if value > FLAG_12 =>
           false
-        case value if value < SPY =>
+        case value if value < SPY_1 =>
           false
         case _ =>
           true
+      }
+    }
+
+
+    override def equals(obj: scala.Any): Boolean = {
+      obj match {
+        case piece: StrategoPiece  if piece.getClass.equals(getClass) && piece.value == getValue =>
+          true
+        case _ =>
+          false
       }
     }
 
@@ -73,13 +96,13 @@ object StrategoType extends WithLogging {
       val deathType = piece.value match {
         case piece if piece == value =>
           DeathType.BOTH_DIE
-        case SPY if value == MARSHAL =>
+        case SPY_1 if value == MARSHAL_10 =>
           DeathType.DEFENDER_DIES
-        case MINER if value == BOMB =>
+        case MINER_3 if value == BOMB_11 =>
           DeathType.DEFENDER_DIES
-        case _ if value == FLAG =>
+        case _ if value == FLAG_12 =>
           DeathType.DEFENDER_DIES
-        case _ if value == BOMB =>
+        case _ if value == BOMB_11 =>
           DeathType.ATTACKER_DIES
         case piece if value < piece =>
           DeathType.DEFENDER_DIES
@@ -102,17 +125,18 @@ object StrategoType extends WithLogging {
       }
 
       b.append(value match {
-        case SPY => "SPY"
-        case GENERAL => "GENERAL"
-        case MINER => "MINER"
-        case MARSHAL => "MARSHAL"
-        case FLAG => "FLAG"
-        case BOMB => "BOMB"
-        case SCOUT => "SCOUT"
-        case MAJOR => "MAJOR"
-        case LIEUTENANT => "LIEUTENANT"
-        case CAPTAIN => "CAPTAIN"
-        case COLONEL => "COLONEL"
+        case SPY_1 => "SPY"
+        case SCOUT_2 => "SCOUT"
+        case MINER_3 => "MINER"
+        case SERGENT_4 => "SERGENT"
+        case LIEUTENANT_5 => "LIEUTENANT"
+        case CAPTAIN_6 => "CAPTAIN"
+        case MAJOR_7 => "MAJOR"
+        case COLONEL_8 => "COLONEL"
+        case GENERAL_9 => "GENERAL"
+        case MARSHAL_10 => "MARSHAL"
+        case BOMB_11 => "BOMB"
+        case FLAG_12 => "FLAG"
       })
 
       b.append(s" ($value)")
@@ -120,17 +144,20 @@ object StrategoType extends WithLogging {
     }
 
     def char: Char
+    def mask: StrategoPiece
   }
 
-  class RedPiece(value: Int) extends StrategoPiece(value) {
+  class RedPiece @JsonCreator() (value: Int) extends StrategoPiece(value) {
 
     override def char = 'r'
+    override def mask = new RedPiece(StrategoType.UNKNOWN_13)
 
 
   }
 
-  class BluePiece(value: Int) extends StrategoPiece(value) {
+  class BluePiece @JsonCreator() (value: Int) extends StrategoPiece(value) {
     override def char = 'b'
+    override def mask = new BluePiece(StrategoType.UNKNOWN_13)
 
   }
 }

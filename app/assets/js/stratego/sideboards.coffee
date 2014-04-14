@@ -1,8 +1,8 @@
 angular.module('app.stratego.sideboards', ['app.stratego.actions', 
     'app.stratego.functions',
     'app.stratego.pieces'])
-    .factory('StrategoSideboards', ['$log', 'StrategoFunctions',  'StrategoPieces'
-(log, StrategoFunctions, StrategoPieces) ->
+    .factory('StrategoSideboards', ['$log', 'StrategoFunctions',  'StrategoPieces, StrategoActions'
+(log, StrategoFunctions, StrategoPieces, StrategoActions) ->
 
     {StrategoPiece} = StrategoPieces
     START_X = 100

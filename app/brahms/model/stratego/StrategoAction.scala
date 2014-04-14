@@ -5,16 +5,32 @@ import scala.beans.BeanProperty
 import brahms.model.User
 import com.fasterxml.jackson.annotation.JsonSubTypes.Type
 import brahms.model.stratego.StrategoType.StrategoPiece
+import brahms.util.WithLogging
 
 @JsonTypeInfo(use=JsonTypeInfo.Id.NAME, include=JsonTypeInfo.As.PROPERTY, property="type")
 @JsonSubTypes(Array(new Type(classOf[StrategoActions.AttackAction]),
   new Type(value=classOf[StrategoActions.MoveAction], name="MoveAction"),
   new Type(value=classOf[StrategoActions.PlacePieceAction], name="PlacePieceAction"),
+  new Type(value=classOf[StrategoActions.AttackAction], name="AttackAction"),
   new Type(value=classOf[StrategoActions.ReplacePieceAction], name="ReplacePieceAction"),
   new Type(value=classOf[StrategoActions.CommitAction], name="CommitAction")))
-abstract class StrategoAction(@BeanProperty user: User) {
+abstract class StrategoAction extends WithLogging {
   def isLegal(game: StrategoGame): Boolean
-  def invoke(game: StrategoGame) : Unit
+  def invoke(game: StrategoGame) : Unit = {
+    game.actionList += this
+    setActionId(game.actionList.size)
+  }
+
+  /**
+   * Masks a action to be serialized to a specific user, usually this
+   * means turning any values to the value UNKNOWN when serialized to the other player
+   * @param user
+   * @return
+   */
+  def mask(user: User) : StrategoAction = this
+
+  @BeanProperty
+  var actionId: Int = _
 
   protected def outOfBounds(x: Int, y:Int): Boolean = {
     if (x > 11 || x < 1) true
@@ -43,7 +59,7 @@ abstract class StrategoAction(@BeanProperty user: User) {
   def isValidMove(x: Int, y: Int, newX: Int, newY: Int, piece: StrategoPiece) = {
     if (isDiagonal(x,y,newX,newY))
       false
-    else if(piece.value != StrategoType.SCOUT && distance(x,y,newX,newY) >1)
+    else if(piece.value != StrategoType.SCOUT_2 && distance(x,y,newX,newY) >1)
       false
     else if (outOfBounds(x,y) || outOfBounds(newX,newY))
       false

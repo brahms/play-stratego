@@ -7,6 +7,10 @@ import brahms.model.stratego.StrategoType._
 import scala.reflect.ClassTag
 import brahms.model.stratego.StrategoGame.StrategoState.StrategoState
 import brahms.util.WithLogging
+import scala.util.control.Breaks._
+import com.fasterxml.jackson.annotation.{JsonProperty, JsonIgnore}
+import brahms.model.stratego.StrategoGame.StrategoState
+import brahms.model.stratego.StrategoGame.StrategoState.StrategoState
 
 object StrategoGame {
 
@@ -18,40 +22,78 @@ object StrategoGame {
 
 }
 
+/**
+ * Encapsulates the current state of the board
+ */
 class StrategoGame extends Game with WithLogging {
+
+  /**
+   * Our board is really just a 2d matrix of StrategoTypes
+   */
   type Board = Array[Array[StrategoType]]
 
   @BeanProperty
   var board: Board = _
 
+  /**
+   * The blue side board is where blue pieces start the game, or end up after death
+   */
   @BeanProperty
   var blueSideboard: Array[mutable.ArrayBuffer[BluePiece]] = _
 
+  /**
+   * The red side board is where red pieces start the game or end up after death
+   */
   @BeanProperty
   var redSideboard: Array[mutable.ArrayBuffer[RedPiece]] = _
 
+  /**
+   * The red player, the player who started the game, and the player who goes first
+   */
   @BeanProperty
   var redPlayer: User = _
 
+  /**
+   * The blue player, the player who goes second
+   */
   @BeanProperty
   var bluePlayer: User = _
 
+  /**
+   * The current turns player
+   */
   @BeanProperty
   var currentPlayer: User = _
 
+  /**
+   * True when the blue player has sent a commit action
+   */
   @BooleanBeanProperty
   var bluePlayerReady: Boolean = false
 
+  /**
+   * True when the red player has sent a commit action
+   */
   @BooleanBeanProperty
   var redPlayerReady: Boolean = false
 
+  /**
+   * The current state of the game, either PLACE_PIECES OR RUNNING
+   */
   @BeanProperty
-  var strategoState: StrategoState = _
+  @JsonIgnore
+  var strategoState: StrategoState = StrategoState.PLACE_PIECES
+
+  @JsonProperty
+  def phase: String = getStrategoState.toString()
 
   @BeanProperty
   var actionList: mutable.Buffer[StrategoAction] = new mutable.ListBuffer[StrategoAction]
 
 
+  /**
+   * Swaps the currentPlayer (basically ending a turn)
+   */
   def swapPlayer {
     if (currentPlayer.equals(bluePlayer))
       currentPlayer = redPlayer
@@ -59,49 +101,89 @@ class StrategoGame extends Game with WithLogging {
       currentPlayer = bluePlayer
   }
 
+  /**
+   * Returns the piece at the given x,y coord
+   * @param x
+   * @param y
+   * @return
+   */
   def getPiece(x: Int, y: Int) = {
     board(x)(y)
   }
 
+  /**
+   * Places a piece arbitrarily on the board
+   * @param x
+   * @param y
+   * @param piece
+   */
   def setPiece(x: Int, y: Int, piece: StrategoType) {
     assert(board(x)(y) != Boundary)
     board(x)(y) = piece
   }
 
+  /**
+   * Moves a piece from an x,y coord to a new position
+   * @param x
+   * @param y
+   * @param newX
+   * @param newY
+   */
   def movePiece(x: Int, y: Int, newX: Int, newY: Int) {
     assert(board(x)(y) != Boundary)
     assert(board(newX)(newY) == Empty)
+    logger.trace(s"Moving piece: ${board(x)(y)} from $x,$y to $newX,$newY")
     board(newX)(newY) = board(x)(y)
     board(x)(y) = Empty
   }
 
+  /**
+   * Kills a piece, removing it from the x,y coord and putting it back in the sideboard
+   * @param x
+   * @param y
+   */
   def killPiece(x: Int, y: Int) {
     assert(board(x)(y).isInstanceOf[StrategoPiece])
-
+    logger.trace(s"Killing piece: ${board(x)(y)} at $x,$y")
     board(x)(y) match {
       case piece: RedPiece =>
-        redSideboard(piece.value) += piece
+        getRedSideboardFor(piece.value) += piece
       case piece: BluePiece =>
-        blueSideboard(piece.value) += piece
+        getBlueSideboardFor(piece.value) += piece
     }
+    board(x)(y) = Empty
   }
 
+  def getRedSideboardFor(value: Int) = {
+    redSideboard(value-1)
+  }
+  def getBlueSideboardFor(value: Int) = {
+    blueSideboard(value-1)
+  }
+
+  /**
+   * Given a value, returns the right amount of pieces to put into the sideboard
+   * @param value
+   * @param tag
+   * @tparam T
+   * @return
+   */
   private def initSideBoard[T <: StrategoPiece](value: Int)(implicit tag: ClassTag[T]): mutable.ArrayBuffer[T] = {
     val pieces = new mutable.ArrayBuffer[T]
 
     val num: Int = value match {
-      case StrategoType.BOMB => 6
-      case StrategoType.FLAG => 1
-      case StrategoType.SPY => 1
-      case StrategoType.SCOUT => 6
-      case StrategoType.MINER => 5
-      case StrategoType.SERGENT => 5
-      case StrategoType.LIEUTENANT => 4
-      case StrategoType.CAPTAIN => 4
-      case StrategoType.MAJOR => 3
-      case StrategoType.COLONEL => 2
-      case StrategoType.GENERAL => 1
-      case StrategoType.MARSHAL => 1
+      case StrategoType.BOMB_11 => 6
+      case StrategoType.FLAG_12 => 1
+      case StrategoType.SPY_1 => 1
+      case StrategoType.SCOUT_2 => 6
+      case StrategoType.MINER_3 => 5
+      case StrategoType.SERGENT_4 => 5
+      case StrategoType.LIEUTENANT_5 => 4
+      case StrategoType.CAPTAIN_6 => 4
+      case StrategoType.MAJOR_7 => 3
+      case StrategoType.COLONEL_8 => 2
+      case StrategoType.GENERAL_9 => 1
+      case StrategoType.MARSHAL_10 => 1
       case _ =>
         throw new IllegalArgumentException("Cannot convert: " + value)
     }
@@ -121,6 +203,10 @@ class StrategoGame extends Game with WithLogging {
     pieces
   }
 
+  /**
+   * Sets up the boundaries of the game, including the edges and the lakes
+   * @param board
+   */
   private def initBoundaries(board: Board) = {
     (0 to 11).foreach {
       i =>
@@ -147,8 +233,37 @@ class StrategoGame extends Game with WithLogging {
     board(8)(6) = Boundary
   }
 
+  /**
+   * Returns true if there's a boundary between x,y and newX, newY
+   * @param x
+   * @param y
+   * @param newX
+   * @param newY
+   * @return
+   */
+  def boundaryInPath(x: Int, y: Int, newX: Int, newY: Int): Boolean = {
+    val byX = if (x < newX) 1 else -1
+    val byY = if (y < newY) 1 else -1
+    var yes = false;
+    breakable {
+      for (checkX <- (x to newX by byX); checkY <- (y to newY by byY)) {
+        if (board(checkX)(checkY) == Boundary) {
+          yes = true
+          break
+        }
+      }
+    }
 
+    yes
+  }
+
+  /**
+   * Initializes the game, making it ready to played
+   */
   def init {
+    assert(redPlayer != null)
+    assert(bluePlayer != null)
+    currentPlayer = redPlayer
     board = Array.fill[StrategoType](12, 12)(Empty)
     initBoundaries(board)
 
@@ -163,6 +278,10 @@ class StrategoGame extends Game with WithLogging {
 
   }
 
+  /**
+   * Returns a short hand form of the given board state, and the sideboard states
+   * @return
+   */
   override def toString: String = {
     val b = new mutable.StringBuilder
     (11 to 0 by -1).foreach {
@@ -191,6 +310,12 @@ class StrategoGame extends Game with WithLogging {
 
   }
 
+  /**
+   * Returns true if the user controls the given piece
+   * @param user
+   * @param piece
+   * @return
+   */
   def sameUser(user: User, piece: StrategoPiece): Boolean = {
     piece match {
       case _: BluePiece if user.equals(getBluePlayer) =>
@@ -202,6 +327,12 @@ class StrategoGame extends Game with WithLogging {
     }
   }
 
+  /**
+   * Returns true if the opposite player controls the given piece
+   * @param user
+   * @param piece
+   * @return
+   */
   def oppositeUser(user: User, piece: StrategoPiece): Boolean = {
 
     piece match {
@@ -215,35 +346,56 @@ class StrategoGame extends Game with WithLogging {
   }
 
 
+  /**
+   * Returns true if the piece is still in the sideboard
+   * @param piece
+   * @return
+   */
   def stillInSideboard(piece: StrategoPiece) = {
     piece match {
       case piece: RedPiece =>
-        !redSideboard(piece.value).isEmpty
+        !getRedSideboardFor(piece.value).isEmpty
       case piece: BluePiece =>
-        !blueSideboard(piece.value).isEmpty
+        !getBlueSideboardFor(piece.value).isEmpty
 
     }
   }
 
+  /**
+   * Puts a piece back into the sideboard
+   * @param piece
+   */
   def putbackIntoSideboard(piece: StrategoPiece) {
+    assert(piece.value != UNKNOWN_13)
     piece match {
       case piece: RedPiece =>
-        redSideboard(piece.value) += piece
+        getRedSideboardFor(piece.value) += piece
       case piece: BluePiece =>
-        blueSideboard(piece.value) += piece
+        getBlueSideboardFor(piece.value) += piece
 
     }
   }
 
+  /**
+   * Removes a piece from the sideboard
+   * @param piece
+   */
   def removeFromSideboard(piece: StrategoPiece) {
+    assert(piece.value != UNKNOWN_13)
     piece match {
       case piece: RedPiece =>
-        redSideboard(piece.value).remove(0)
+        getRedSideboardFor(piece.value).remove(0)
       case piece: BluePiece =>
-        blueSideboard(piece.value).remove(0)
+        getBlueSideboardFor(piece.value).remove(0)
     }
   }
 
+  /**
+   * Returns true if the given x,y coord is on the red side of the board
+   * @param x
+   * @param y
+   * @return
+   */
   def isOnRedSide(x: Int, y: Int): Boolean = {
     if (board(x)(y) == Boundary) return false
     if (y <= 4)
@@ -252,6 +404,12 @@ class StrategoGame extends Game with WithLogging {
       false
   }
 
+  /**
+   * Returns true if the given x,y coord is on the blue side of the board
+   * @param x
+   * @param y
+   * @return
+   */
   def isOnBlueSide(x: Int, y: Int): Boolean = {
     if (board(x)(y) == Boundary) return false
     if (y >= 7)

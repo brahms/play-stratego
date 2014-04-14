@@ -45,13 +45,10 @@ class User {
   @BooleanBeanProperty
   var admin: Boolean = _;
 
-  def validatePassword(password: String) : Boolean = {
-    BCrypt.checkpw(password, this.password)
-  }
+  def validatePassword(password: String) : Boolean = BCrypt.checkpw(password, this.password)
 
-  override def toString: String = {
-    s"User(id: $id, username: $username, password: $password, admin: $admin)"
-  }
+
+  override def toString = s"User(username: $username, id: $id, admin: $admin)"
 
   def toSimpleUser: User = {
     val user = new User
@@ -69,5 +66,7 @@ class User {
     }
 
   }
+
+
 
 }

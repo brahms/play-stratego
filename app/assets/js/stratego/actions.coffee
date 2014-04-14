@@ -47,6 +47,7 @@ angular.module('app.stratego.actions', [])
             throw "fromJson Not implemented"
 
     class CommitAction extends StrategoAction
+        constructor: ->
         isLegal: (board) ->
             throw "isLegal Not implemented"
         apply: (board) ->

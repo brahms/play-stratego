@@ -33,9 +33,7 @@ angular.module('app.stratego.board', ['app.stratego.square',
             ]   #y0 y1 y2 y3 y4 y5 y6 y7 y8 y9 y10 y11
 
 
-        registerController: (@ctrl) ->
-            log.debug "Ctrl registered: #{@ctrl}"
-        init: (isRed) ->
+        init: (isRed, @ctrl) ->
             log.debug "Creating board at element: #{@canvas}"
             stage = new Kinetic.Stage({
                             container: @canvas
@@ -61,7 +59,7 @@ angular.module('app.stratego.board', ['app.stratego.square',
                 }
                 backgroundLayer.add bgImage
                 @stage.add backgroundLayer
-                
+
                 bgImage.on 'mousemove', () ->
                     x = stage.getPointerPosition().x #- bgImage.getPosition().x;
                     y = stage.getPointerPosition().y #- bgImage.getPosition().y;
