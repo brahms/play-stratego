@@ -1,7 +1,7 @@
 package brahms.database.mongo
 
 import brahms.database.GameRepository
-import brahms.model.Game
+import brahms.model.{GameState, Game}
 
 import scala.collection.JavaConverters._
 
@@ -57,5 +57,9 @@ class MongoGameRepository @Inject()(jongo: Jongo) extends AbstractMongoRepositor
       logger.debug("Deleting game: {}", entity.getId)
       games.remove(entity.getId)
     }
+  }
+
+  override def findPending: Seq[Game] = {
+    games.find("{state: #}", GameState.PENDING.toString).as(classOf[Game])
   }
 }

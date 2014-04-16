@@ -15,6 +15,8 @@ object Game {
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "type")
 @JsonSubTypes(Array(new Type(value = classOf[StrategoGame], name = "Stratego")))
 abstract class Game {
+  def getType: String
+
 
   @Id
   @BeanProperty
@@ -25,6 +27,9 @@ abstract class Game {
 
   @BeanProperty
   var creator: User = _
+
+  def mask(user: User) : Game
+
 
 
 

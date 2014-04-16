@@ -48,7 +48,7 @@ class User {
   var admin: Boolean = _;
 
   @BeanProperty
-  var currentGameId: String = _
+  var currentGameId: Option[ObjectId] = None
 
   def validatePassword(password: String) : Boolean = BCrypt.checkpw(password, this.password)
 

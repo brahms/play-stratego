@@ -438,4 +438,6 @@ class StrategoGame extends Game {
     game.setState(state)
     game
   }
+
+  override def getType: String = "Stratego"
 }

@@ -12,8 +12,7 @@ class TestSpringConfig extends WithLogging {
 
   @Bean
   def uri: MongoClientURI = {
-    val clientUri = new MongoClientURI("mongodb://cbrahms:OneOne11@localhost/stratego")
-    clientUri
+    new MongoClientURI("mongodb://cbrahms:OneOne11@localhost/stratego")
   }
 
   @Bean

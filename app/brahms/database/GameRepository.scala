@@ -6,6 +6,7 @@ import org.bson.types.ObjectId
 trait GameRepository {
   def findOne(id: ObjectId): Option[Game]
   def findAll(ids: Iterable[String]): Seq[Game]
+  def findPending: Seq[Game]
   def deleteAll(): Unit
   def delete(entities: Iterable[_ <: Game]): Unit
   def delete(id: ObjectId): Unit

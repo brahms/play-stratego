@@ -22,7 +22,6 @@ object Serializer {
     o.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
     o.setSerializationInclusion(Include.NON_NULL)
     o.configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false)
-    o.configure(MapperFeature.INFER_PROPERTY_MUTATORS, true)
     o.setVisibilityChecker(o.getSerializationConfig
       .getDefaultVisibilityChecker
       .withFieldVisibility(JsonAutoDetect.Visibility.ANY)
