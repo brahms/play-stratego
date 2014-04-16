@@ -3,13 +3,12 @@ package brahms.model.stratego
 import org.scalatest.{BeforeAndAfter, FunSuite}
 import brahms.model.stratego.StrategoActions._
 import brahms.model.User
-import brahms.model.stratego.StrategoType.{Empty, RedPiece, BluePiece}
+import brahms.model.stratego.StrategoTypes._
 import brahms.serializer.Serializer
-import org.specs2.mutable.Before
-import brahms.model.stratego.StrategoGame.StrategoState
 import brahms.model.stratego.StrategoActions.MoveAction
 import brahms.model.stratego.StrategoActions.AttackAction
 import brahms.model.stratego.StrategoActions.PlacePieceAction
+import org.bson.types.ObjectId
 
 class StrategoActionTest extends FunSuite with BeforeAndAfter {
   val serializer = Serializer.serializer
@@ -22,11 +21,11 @@ class StrategoActionTest extends FunSuite with BeforeAndAfter {
     redUser = new User
     redUser.setAdmin(false)
     redUser.setUsername("redUser")
-    redUser.setId("redUserId")
+    redUser.setId(new ObjectId())
     blueUser = new User
     blueUser.setAdmin(false)
     blueUser.setUsername("blueUser")
-    blueUser.setId("blueUser")
+    blueUser.setId(new ObjectId())
     game = new StrategoGame
     game.setRedPlayer(redUser)
     game.setBluePlayer(blueUser)
@@ -35,8 +34,8 @@ class StrategoActionTest extends FunSuite with BeforeAndAfter {
   }
   test("ReplacePieceAction") {
 
-    val piece = new BluePiece(StrategoType.MAJOR_7)
-    val piece2 = new BluePiece(StrategoType.GENERAL_9)
+    val piece = new BluePiece(MAJOR_7)
+    val piece2 = new BluePiece(GENERAL_9)
     val placePieceAction = PlacePieceAction(redUser.toSimpleUser, 1, 10 , piece)
     val placePieceAction2 = PlacePieceAction(redUser, 2,10, piece2)
     placePieceAction.invoke(game)
@@ -66,7 +65,7 @@ class StrategoActionTest extends FunSuite with BeforeAndAfter {
 
   }
   test("PlacePieceAction") {
-    val piece = new BluePiece(StrategoType.MAJOR_7)
+    val piece = new BluePiece(MAJOR_7)
 
     val placePieceAction = PlacePieceAction(redUser.toSimpleUser, 1, 10 , piece)
     val json = serializer.writeValueAsString(placePieceAction)
@@ -76,20 +75,20 @@ class StrategoActionTest extends FunSuite with BeforeAndAfter {
     assertResult(placePieceAction.user)(actualPlaceAction.user)
     assertResult(placePieceAction.x)(actualPlaceAction.x)
     assertResult(placePieceAction.y)(actualPlaceAction.y)
-    assertResult(StrategoType.UNKNOWN_13)(actualPlaceAction.mask(blueUser).piece.value)
+    assertResult(UNKNOWN_13)(actualPlaceAction.mask(blueUser).piece.value)
 
-    val expectedSize = game.blueSideboard(piece.value).size-1
+    val expectedSize = game.getBlueSideboardFor(piece.value).size-1
     actualPlaceAction.invoke(game)
     assertResult(piece)(game.getPiece(1, 10))
-    assertResult(expectedSize)(game.blueSideboard(piece.value).size)
+    assertResult(expectedSize)(game.getBlueSideboardFor(piece.value).size)
     assertResult(1)(actualPlaceAction.getActionId)
 
     // can also double invoke, which should move back the old piece into the sideboard
-    actualAction.invoke(game)
+    actualPlaceAction.invoke(game)
     actualPlaceAction.invoke(game)
     assertResult(piece)(game.getPiece(1, 10))
-    assertResult(expectedSize)(game.blueSideboard(piece.value).size)
-    assertResult(2)(actualPlaceAction.getActionId)
+    assertResult(expectedSize)(game.getBlueSideboardFor(piece.value).size)
+    assertResult(3)(actualPlaceAction.getActionId)
 
 
 
@@ -101,9 +100,9 @@ class StrategoActionTest extends FunSuite with BeforeAndAfter {
     val json = serializer.writeValueAsString(attackActionToSerialize)
     println(json)
     val attackAction = serializer.readValue(json, classOf[StrategoAction])
-    val redPiece = new RedPiece(StrategoType.LIEUTENANT_5)
+    val redPiece = new RedPiece(LIEUTENANT_5)
     game.setPiece(1,1, redPiece)
-    game.setPiece(1,2, new BluePiece(StrategoType.SPY_1))
+    game.setPiece(1,2, new BluePiece(SPY_1))
     assert(attackAction.isLegal(game))
     attackAction.invoke(game)
     assertResult (Empty) ( game.getPiece(1, 1) )
@@ -119,8 +118,8 @@ class StrategoActionTest extends FunSuite with BeforeAndAfter {
   }
 
   test("MoveAction") {
-    val redCaptain = new RedPiece(StrategoType.CAPTAIN_6)
-    val redScout = new RedPiece(StrategoType.SCOUT_2)
+    val redCaptain = new RedPiece(CAPTAIN_6)
+    val redScout = new RedPiece(SCOUT_2)
     game.setPiece(1,1, redCaptain)
     game.setPiece(2,1, redScout)
     game.setStrategoState(StrategoState.RUNNING)
@@ -200,29 +199,29 @@ class StrategoActionTest extends FunSuite with BeforeAndAfter {
 
   test("Cheating PlacePieceAction") {
     // should not be able to place a blue piece down on the red side
-    var action = PlacePieceAction(blueUser, 1, 1, new BluePiece(StrategoType.MINER_3))
+    var action = PlacePieceAction(blueUser, 1, 1, new BluePiece(MINER_3))
     assert(!action.isLegal(game))
     // should not be able to place a red piece down on the blue side
-    action = PlacePieceAction(blueUser, 1, 10, new RedPiece(StrategoType.MINER_3))
+    action = PlacePieceAction(blueUser, 1, 10, new RedPiece(MINER_3))
     assert(!action.isLegal(game))
 
     // should not be able to put more than two marshals down
-    action = PlacePieceAction(redUser, 1, 1, new RedPiece(StrategoType.MARSHAL_10))
+    action = PlacePieceAction(redUser, 1, 1, new RedPiece(MARSHAL_10))
     action.invoke(game)
-    assert(game.getRedSideboardFor(StrategoType.MARSHAL_10).isEmpty)
-    action = PlacePieceAction(redUser, 1, 2, new RedPiece(StrategoType.MARSHAL_10))
+    assert(game.getRedSideboardFor(MARSHAL_10).isEmpty)
+    action = PlacePieceAction(redUser, 1, 2, new RedPiece(MARSHAL_10))
     assert(!action.isLegal(game))
 
     // should not be able to place a diff color piece
-    action = PlacePieceAction(blueUser, 1, 10, new RedPiece(StrategoType.SCOUT_2))
+    action = PlacePieceAction(blueUser, 1, 10, new RedPiece(SCOUT_2))
     assert(!action.isLegal(game))
 
   }
 
   test("Cheating attack action") {
-    game.setPiece(1,1, new RedPiece(StrategoType.BOMB_11))
-    game.setPiece(2,1, new RedPiece(StrategoType.MAJOR_7))
-    game.setPiece(1,2, new BluePiece(StrategoType.MAJOR_7))
+    game.setPiece(1,1, new RedPiece(BOMB_11))
+    game.setPiece(2,1, new RedPiece(MAJOR_7))
+    game.setPiece(1,2, new BluePiece(MAJOR_7))
     // should not be able to attack with a bomb
     var action = AttackAction(redUser, 1, 1, 1, 2)
     assert(!action.isLegal(game))
@@ -237,7 +236,7 @@ class StrategoActionTest extends FunSuite with BeforeAndAfter {
   }
 
   test("Cheating replace action") {
-    game.setPiece(1, 1, new RedPiece(StrategoType.MAJOR_7))
+    game.setPiece(1, 1, new RedPiece(MAJOR_7))
     // should not be able to replace another users piece
     var action = ReplacePieceAction(blueUser, 1, 1, 1, 2)
     assert(!action.isLegal(game))

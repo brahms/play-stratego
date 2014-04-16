@@ -1,22 +1,18 @@
-package brahms.config
+package brahms.test
 
-import org.springframework.context.annotation.{ComponentScan, Bean, Configuration}
-import com.mongodb._
-import play.api.Play
-import play.api.Play.current
+import org.springframework.context.annotation.{Bean, ComponentScan, Configuration}
+import com.mongodb.{MongoClient, MongoClientURI}
 import brahms.util.WithLogging
 import org.jongo.Jongo
 import brahms.serializer.Serializer
 
 @Configuration
-@ComponentScan
-class Config extends WithLogging {
-
+@ComponentScan(basePackages = Array("brahms"))
+class TestSpringConfig extends WithLogging {
 
   @Bean
   def uri: MongoClientURI = {
-    val uri = Play.configuration.getString("mongo.uri").get
-    val clientUri = new MongoClientURI(uri)
+    val clientUri = new MongoClientURI("mongodb://cbrahms:OneOne11@localhost/stratego")
     clientUri
   }
 
@@ -29,5 +25,4 @@ class Config extends WithLogging {
   def mongoClient: MongoClient = {
     new MongoClient(uri)
   }
-
 }

@@ -1,9 +1,8 @@
 package brahms.model.stratego
 
-import brahms.model.stratego.StrategoType._
+import brahms.model.stratego.StrategoTypes._
 import brahms.model.User
-import brahms.model.stratego.StrategoType.DeathType._
-import brahms.model.stratego.StrategoGame.StrategoState
+import brahms.model.stratego.DeathType._
 import scala.beans.BeanProperty
 
 object StrategoActions {
@@ -29,10 +28,10 @@ object StrategoActions {
 
       val moveType = game.board(newX)(newY)
       game.board(x)(y) match {
-        case piece: StrategoPiece if game.sameUser(user, piece) && moveType == Empty =>
+        case piece: StrategoPiece if game.sameUser(user, piece) && moveType == Empty() =>
           if (isDiagonal(x, y, newX, newY)) return false
           val dist = distance(x, y, newX, newY)
-          if (dist > 1 && piece.value != StrategoType.SCOUT_2) return false
+          if (dist > 1 && piece.value != SCOUT_2) return false
           if (game.boundaryInPath(x, y, newX, newY)) return false
           true
         case _ =>
@@ -66,13 +65,12 @@ object StrategoActions {
     @BeanProperty
     var defender: StrategoPiece = null
     @BeanProperty
-    var result: String = null
+    var result: DeathType = null
     override def invoke(game: StrategoGame): Unit = {
       attacker = game.board(x)(y).asInstanceOf[StrategoPiece]
 
       defender = game.board(newX)(newY).asInstanceOf[StrategoPiece]
       val resultEnum = defender.ifAttackedBy(attacker)
-      result = resultEnum.toString
       logger.trace(s"$user has $attacker attacking $defender and $result")
       resultEnum match {
         case BOTH_DIE =>
@@ -164,7 +162,7 @@ object StrategoActions {
       if (outOfBounds(x, y)) return false
       if (game.strategoState != StrategoState.PLACE_PIECES) return false;
       if (!game.sameUser(user, piece)) return false;
-      if (Empty != game.board(x)(y)) return false;
+      if (Empty() != game.board(x)(y)) return false;
       if (!piece.isValid) return false
       piece match {
         case piece: BluePiece =>
@@ -210,7 +208,7 @@ object StrategoActions {
       }
 
       game.board(newX)(newY) = game.board(x)(y)
-      game.board(x)(y) = Empty
+      game.board(x)(y) = Empty()
       var logstmt = s"$user replaces ${game.board(newX)(newY)} from $x, $y to ($newX, $newY). "
       removedPiece.foreach {
         p => logstmt += s"Also put $p back into sideboard"

@@ -1,10 +1,12 @@
 package brahms.model
 import scala.beans.{BeanProperty, BooleanBeanProperty}
 import org.springframework.security.crypto.bcrypt.BCrypt
-import org.springframework.data.annotation.Id
 import brahms.util.WithLogging
 import com.fasterxml.jackson.annotation.JsonView
 import brahms.serializer.JsonViews
+import org.jongo.marshall.jackson.oid.Id
+import org.bson.types.ObjectId
+
 object User extends WithLogging{
   val USERNAME_PATTERN = "[a-zA-Z][a-zA-Z0-9]{3,10}"
   val PASSWORD_MIN = 6
@@ -33,7 +35,7 @@ class User {
 
   @Id
   @BeanProperty
-  var id: String = _;
+  var id: ObjectId = _;
 
   @BeanProperty
   var username: String = _;
@@ -44,6 +46,9 @@ class User {
 
   @BooleanBeanProperty
   var admin: Boolean = _;
+
+  @BeanProperty
+  var currentGameId: String = _
 
   def validatePassword(password: String) : Boolean = BCrypt.checkpw(password, this.password)
 
@@ -66,6 +71,7 @@ class User {
     }
 
   }
+
 
 
 

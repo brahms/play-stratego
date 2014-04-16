@@ -1,16 +1,11 @@
 package brahms.database
 
-import org.springframework.data.mongodb.repository.MongoRepository
 import brahms.model.User
-import org.springframework.stereotype.Repository
-import org.springframework.data.repository.CrudRepository
-import org.springframework.data.mongodb.core.query.Query._
-import org.springframework.data.mongodb.core.query.Criteria._
-import java.{lang, util}
-import org.springframework.data.mongodb.core.query.Query
+import org.bson.types.ObjectId
 
 trait UserRepository {
   def findByUsername(username: String): Option[User]
+
   def findAll(): Seq[User]
 
   def save[S <: User](entites: Iterable[S]): Seq[S]
@@ -21,14 +16,15 @@ trait UserRepository {
 
   def delete(entity: User): Unit
 
-  def delete(id: String): Unit
+  def delete(id: ObjectId): Unit
+
   def count(): Long
 
   def findAll(ids: Iterable[String]): Seq[User]
 
-  def exists(id: String): Boolean
+  def exists(id: ObjectId): Boolean
 
-  def findOne(id: String): Option[User]
+  def findOne(id: ObjectId): Option[User]
 
   def save[S <: User](entity: S): S
 }

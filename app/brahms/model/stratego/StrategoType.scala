@@ -1,14 +1,23 @@
 package brahms.model.stratego
 
-import brahms.model.stratego.StrategoType.DeathType.DeathType
 import brahms.util.WithLogging
 import com.fasterxml.jackson.annotation._
 import com.fasterxml.jackson.annotation.JsonSubTypes.Type
-import scala.annotation.meta.{getter, param}
-import scala.beans
 import scala.beans.BeanProperty
 
-object StrategoType extends WithLogging {
+
+@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "type")
+@JsonSubTypes(Array(new Type(value = classOf[StrategoTypes.Empty], name = "Empty")
+, new Type(value = classOf[StrategoTypes.Boundary], name = "Boundary")
+, new Type(value = classOf[StrategoTypes.BluePiece], name = "BluePiece")
+, new Type(value = classOf[StrategoTypes.RedPiece], name = "RedPiece")))
+sealed trait StrategoType {
+  def toShortHand: String
+}
+
+
+
+object StrategoTypes extends WithLogging {
   val SPY_1 = 1
   val SCOUT_2 = 2
   val MINER_3 = 3
@@ -19,54 +28,42 @@ object StrategoType extends WithLogging {
   val COLONEL_8 = 8
   val GENERAL_9 = 9
   val MARSHAL_10 = 10
-  val BOMB_11  = 11
+  val BOMB_11 = 11
   val FLAG_12 = 12
   val UNKNOWN_13 = 13
   val MINVAL = SPY_1
   val MAXVAL = FLAG_12
 
 
-  object DeathType extends Enumeration {
-    type DeathType = Value
-    val BOTH_DIE = Value("BOTH_DIE")
-    val ATTACKER_DIES = Value("ATTACKER_DIES")
-    val DEFENDER_DIES = Value("DEFENDER_DIES")
-  }
-
-
-  object Boundary extends StrategoType {
+  case class Boundary() extends StrategoType {
     override def toShortHand: String = "..."
+
     override def toString: String = "Boundary"
   }
 
-  object Empty extends StrategoType {
+  case class Empty() extends StrategoType {
 
     override def toShortHand: String = "   "
+
     override def toString: String = "Empty"
   }
+  sealed abstract class StrategoPiece(constructorValue: Int) extends StrategoType {
+    @BeanProperty
+    var value: Int = constructorValue
 
-
-
-  @JsonTypeInfo(use=JsonTypeInfo.Id.NAME, include=JsonTypeInfo.As.PROPERTY, property="type")
-  @JsonSubTypes(Array(new Type(value=classOf[BluePiece], name="BluePiece"),
-    new Type(value=classOf[RedPiece], name="RedPiece")
-  ))
-  abstract class StrategoPiece (constructorValue: Int) extends StrategoType {
-      @BeanProperty
-      var value: Int = constructorValue
-      override def toShortHand: String = value match {
-        case value if value == FLAG_12 =>
-          s"${char}FL"
-        case value if value == BOMB_11 =>
-          s"${char}BO"
-        case value if value == SPY_1 =>
-          s"${char}SP"
-        case value if value == MINER_3 =>
-          s"${char}MI"
-        case value if value >= 10 =>
-          s"$char$value"
-        case _ =>
-          s" $char$value"
+    override def toShortHand: String = value match {
+      case value if value == FLAG_12 =>
+        s"${char}FL"
+      case value if value == BOMB_11 =>
+        s"${char}BO"
+      case value if value == SPY_1 =>
+        s"${char}SP"
+      case value if value == MINER_3 =>
+        s"${char}MI"
+      case value if value >= 10 =>
+        s"$char$value"
+      case _ =>
+        s" $char$value"
     }
 
     @JsonIgnore
@@ -84,7 +81,7 @@ object StrategoType extends WithLogging {
 
     override def equals(obj: scala.Any): Boolean = {
       obj match {
-        case piece: StrategoPiece  if piece.getClass.equals(getClass) && piece.value == getValue =>
+        case piece: StrategoPiece if piece.getClass.equals(getClass) && piece.value == getValue =>
           true
         case _ =>
           false
@@ -119,7 +116,7 @@ object StrategoType extends WithLogging {
       val b = new StringBuilder
       char match {
         case 'r' =>
-          b.append("Red " )
+          b.append("Red ")
         case 'b' =>
           b.append("Blue ")
       }
@@ -144,24 +141,24 @@ object StrategoType extends WithLogging {
     }
 
     def char: Char
+
     def mask: StrategoPiece
   }
 
-  class RedPiece @JsonCreator() (value: Int) extends StrategoPiece(value) {
+  class RedPiece @JsonCreator()(value: Int) extends StrategoPiece(value) {
 
     override def char = 'r'
-    override def mask = new RedPiece(StrategoType.UNKNOWN_13)
+
+    override def mask = new RedPiece(StrategoTypes.UNKNOWN_13)
 
 
   }
 
-  class BluePiece @JsonCreator() (value: Int) extends StrategoPiece(value) {
+  class BluePiece @JsonCreator()(value: Int) extends StrategoPiece(value) {
     override def char = 'b'
-    override def mask = new BluePiece(StrategoType.UNKNOWN_13)
+
+    override def mask = new BluePiece(StrategoTypes.UNKNOWN_13)
 
   }
-}
 
-trait StrategoType {
-  def toShortHand: String
 }

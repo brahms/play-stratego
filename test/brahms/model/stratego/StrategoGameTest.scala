@@ -1,32 +1,32 @@
 package brahms.model.stratego
 
 import org.scalatest.FunSuite
-import brahms.model.stratego.StrategoType.{Empty, BluePiece}
+import brahms.model.stratego.StrategoTypes._
 import brahms.model.User
 import brahms.serializer.Serializer
 import brahms.model.stratego.StrategoActions.MoveAction
-import brahms.model.stratego.StrategoGame.StrategoState
+import org.bson.types.ObjectId
 
 
 class StrategoGameTest extends FunSuite {
 
   test("Create a stratego game") {
     val board = new StrategoGame
-    board.init
     val red = new User
     red.setUsername("red")
-    red.setId("sd")
+    red.setId(new ObjectId())
 
     val blue = new User
     blue.setUsername("blue")
-    blue.setId("sd")
+    blue.setId(new ObjectId())
+
+    board.setRedPlayer(red)
+    board.setBluePlayer(blue)
+    board.init
 
 
     board.setPiece(1,1, new BluePiece(1))
     board.setPiece(2,2, new BluePiece(1))
-    board.setRedPlayer(red)
-    board.setCurrentPlayer(board.getRedPlayer)
-    board.setBluePlayer(blue)
     board.strategoState = StrategoState.RUNNING
 
     val action =  MoveAction(blue,1,1,1,2)
@@ -36,9 +36,7 @@ class StrategoGameTest extends FunSuite {
     assert(board.currentPlayer == board.bluePlayer)
     board.actionList += action
 
-    println(board.toString)
-
-    println(Serializer.serializer.writeValueAsString(board))
+    println(Serializer.serializer.writeValueAsString(board.mask(red)))
 
   }
 

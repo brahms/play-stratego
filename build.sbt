@@ -12,15 +12,17 @@ libraryDependencies ++= Seq(
   "org.springframework.security" % "spring-security-config" % "3.2.3.RELEASE",
   "com.fasterxml.jackson.datatype" % "jackson-datatype-joda" % "2.3.2",
   "com.fasterxml.jackson.module" %% "jackson-module-scala" % "2.3.3-SNAPSHOT",
-  "org.springframework.data" % "spring-data-mongodb" % "1.4.1.RELEASE",
   "com.github.nscala-time" %% "nscala-time" % "0.8.0",
   "org.mongodb" % "mongo-java-driver" % "2.11.4",
   "org.slf4j" % "jcl-over-slf4j" % "1.7.6",
-  "org.slf4j" % "log4j-over-slf4j" % "1.7.6"
+  "org.slf4j" % "log4j-over-slf4j" % "1.7.6",
+  "org.mongodb" % "mongo-java-driver" % "2.11.4",
+  "org.jongo" % "jongo" % "1.0"
 )
 
 libraryDependencies ++= Seq(
-  "org.scalatest" %% "scalatest" % "2.1.3" % "test"
+  "org.scalatest" %% "scalatest" % "2.1.3" % "test",
+  "org.springframework" % "spring-test" % "4.0.3.RELEASE" % "test"
 )
 
 play.Project.playScalaSettings

@@ -5,6 +5,7 @@ import play.api.test.FakeApplication
 import brahms.test.WithTestExtras
 import brahms.serializer.{JsonViews, Serializer}
 import scala.xml.Utility
+import org.bson.types.ObjectId
 
 class UserTest extends FunSuite with WithTestExtras {
   test("encryptPassword") {
@@ -19,7 +20,7 @@ class UserTest extends FunSuite with WithTestExtras {
     val user = new User
     user.setPassword("bla")
     user.setAdmin(true)
-    user.setId("12345")
+    user.setId(new ObjectId())
     val json = Serializer.serializer.writeValueAsString(user)
     println(json)
     val newUser = Serializer.serializer.readValue(json, classOf[User])
@@ -42,7 +43,7 @@ class UserTest extends FunSuite with WithTestExtras {
     val user = new User
     user.setPassword("bla")
     user.setAdmin(true)
-    user.setId("12345")
+    user.setId(new ObjectId())
 
     println(Utility.escape(Serializer.serializer.writerWithView(JsonViews.PUBLIC).writeValueAsString(user)))
   }

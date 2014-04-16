@@ -1,20 +1,20 @@
 package brahms.model.stratego
 
 import org.scalatest.FunSuite
-import brahms.model.stratego.StrategoType.{DeathType, RedPiece, BluePiece}
+import brahms.model.stratego.StrategoTypes._
 
 class StrategoType$Test extends FunSuite {
 
   test("death") {
-    val blueGeneral = new BluePiece(StrategoType.GENERAL_9)
+    val blueGeneral = new BluePiece(GENERAL_9)
 
-    val redMarshal = new RedPiece(StrategoType.MARSHAL_10)
-    val blueSpy = new BluePiece(StrategoType.SPY_1)
-    val blueMiner = new BluePiece(StrategoType.MINER_3)
-    val redBomb = new RedPiece(StrategoType.BOMB_11)
-    val blueMarshal = new BluePiece(StrategoType.MARSHAL_10)
-    val blueFlag = new BluePiece(StrategoType.FLAG_12)
-    val redScout = new RedPiece(StrategoType.SCOUT_2)
+    val redMarshal = new RedPiece(MARSHAL_10)
+    val blueSpy = new BluePiece(SPY_1)
+    val blueMiner = new BluePiece(MINER_3)
+    val redBomb = new RedPiece(BOMB_11)
+    val blueMarshal = new BluePiece(MARSHAL_10)
+    val blueFlag = new BluePiece(FLAG_12)
+    val redScout = new RedPiece(SCOUT_2)
 
     assert(blueGeneral.ifAttackedBy(redMarshal) == DeathType.DEFENDER_DIES)
     assert(redMarshal.ifAttackedBy(blueSpy) == DeathType.DEFENDER_DIES)

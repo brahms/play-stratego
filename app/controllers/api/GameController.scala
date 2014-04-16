@@ -2,21 +2,40 @@ package controllers.api
 
 import brahms.util.AbstractController
 import brahms.response.JsonResponse
+import brahms.model.stratego.StrategoAction
+import javax.inject.Inject
+import brahms.database.GameRepository
+import scala.beans.BeanProperty
 
 class GameController extends AbstractController {
-  def getGames = Authenticated {
+
+  @Inject
+  @BeanProperty
+  var gameRepo: GameRepository = _
+
+  def getGames = Authenticated.async {
     implicit request =>
-      JsonResponse.ok
+      async {
+
+        JsonResponse.ok
+      }
   }
 
-  def getGameState(id: String) = Authenticated {
+  def getGameState(id: String) = Authenticated.async {
     implicit request =>
-      JsonResponse.ok
+      async {
+
+        JsonResponse.ok
+      }
   }
 
-  def invokeAction(id: String) = Authenticated {
+  def invokeAction(id: String) = Authenticated.text {
     implicit request =>
-      JsonResponse.ok
+      val action = serializer.readValue(request.body, classOf[StrategoAction])
+      async {
+        JsonResponse.ok
+
+      }
   }
 
 

@@ -2,75 +2,74 @@ package brahms.database.mongo
 
 import brahms.database.UserRepository
 import org.springframework.stereotype.Repository
-import javax.inject.Inject
-import org.springframework.data.mongodb.core.MongoTemplate
 import brahms.model.User
-import java.{lang, util}
-import org.springframework.data.domain.{Sort, Page, Pageable}
-import org.springframework.data.mongodb.core.query.Query._
-import org.springframework.data.mongodb.core.query.Criteria._
 import scala.collection.JavaConverters._
-import org.springframework.data.mongodb.core.query.Query
+import org.bson.types.ObjectId
+import javax.inject.Inject
+import org.jongo.Jongo
 
 
 @Repository
-class MongoUserRepository @Inject() (mongoTemplate: MongoTemplate) extends AbstractMongoRepository with UserRepository {
+class MongoUserRepository @Inject() (jongo: Jongo) extends AbstractMongoRepository(jongo) with UserRepository {
   val USERS = "users"
+  val users = jongo.getCollection(USERS)
+
   override def findByUsername(username: String): Option[User] = {
 
-    Option(mongoTemplate.findOne(query(where("username").is(username)), classOf[User], USERS ))
+    Option(users.findOne("{username:#}", username).as(classOf[User]))
   }
 
 
   override def findAll(): Seq[User] = {
-    mongoTemplate.findAll(classOf[User], USERS).asScala.toList
+    users.find().as(classOf[User]).asScala.toSeq
   }
 
   override def save[S <: User](entites: Iterable[S]): Seq[S] = {
     entites.map {
       e =>
-        mongoTemplate.save(e, USERS)
+        users.save(e)
         e
-    }.toList
+    }.toSeq
   }
 
   override def deleteAll(): Unit = {
-    mongoTemplate.remove(new Query, USERS)
+    users.remove()
   }
 
   override def delete(entities: Iterable[_ <: User]): Unit = {
-    entities.map { e=>
-      mongoTemplate.remove(query(where("username").is(e.getUsername)), USERS)
+    entities.foreach {
+      e =>
+        delete(e)
     }
   }
 
   override def delete(entity: User): Unit = {
-    mongoTemplate.remove(query(where("username").is(entity.username)), USERS)
+    delete(entity.id)
   }
 
-  override def delete(id: String): Unit = {
-
-    mongoTemplate.remove(query(where("_id").is(id)), USERS)
+  override def delete(id: ObjectId): Unit = {
+    logger.debug("Deleting user: {}", id)
+    users.remove(id)
   }
 
   override def count(): Long = {
-    mongoTemplate.count(new Query, USERS)
+    users.count()
   }
 
   override def findAll(ids: Iterable[String]): Seq[User] = {
-    mongoTemplate.find(query(where("_id").in(ids)), classOf[User], USERS).asScala
+    users.find().as(classOf[User]).asScala.toSeq
   }
 
-  override def exists(id: String): Boolean = {
-    mongoTemplate.count(query(where("_id").is(id)), USERS) > 0
+  override def exists(id: ObjectId): Boolean = {
+    users.count("{_id: #}", id) == 1
   }
 
-  override def findOne(id: String): Option[User] = {
-    Option(mongoTemplate.findById(id, classOf[User], USERS))
+  override def findOne(id: ObjectId): Option[User] = {
+    Option(users.findOne(id).as(classOf[User]))
   }
 
   override def save[S <: User](entity: S): S = {
-    mongoTemplate.save(entity, USERS)
+    users.save(entity)
     entity
   }
 }

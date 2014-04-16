@@ -3,30 +3,22 @@ package brahms.model.stratego
 import brahms.model.{User, Game}
 import scala.beans.{BooleanBeanProperty, BeanProperty}
 import scala.collection.mutable
-import brahms.model.stratego.StrategoType._
+import brahms.model.stratego.StrategoTypes._
 import scala.reflect.ClassTag
-import brahms.model.stratego.StrategoGame.StrategoState.StrategoState
 import brahms.util.WithLogging
 import scala.util.control.Breaks._
-import com.fasterxml.jackson.annotation.{JsonProperty, JsonIgnore}
-import brahms.model.stratego.StrategoGame.StrategoState
-import brahms.model.stratego.StrategoGame.StrategoState.StrategoState
-
-object StrategoGame {
-
-  object StrategoState extends Enumeration {
-    type StrategoState = Value
-    val PLACE_PIECES = Value("PLACE_PIECES")
-    val RUNNING = Value("RUNNING")
-  }
+import com.fasterxml.jackson.annotation.{JsonView, JsonProperty, JsonIgnore}
+import brahms.serializer.JsonViews._
+object StrategoGame extends WithLogging {
 
 }
 
 /**
  * Encapsulates the current state of the board
  */
-class StrategoGame extends Game with WithLogging {
+class StrategoGame extends Game {
 
+  import StrategoGame.logger
   /**
    * Our board is really just a 2d matrix of StrategoTypes
    */
@@ -118,7 +110,7 @@ class StrategoGame extends Game with WithLogging {
    * @param piece
    */
   def setPiece(x: Int, y: Int, piece: StrategoType) {
-    assert(board(x)(y) != Boundary)
+    assert(board(x)(y) != Boundary())
     board(x)(y) = piece
   }
 
@@ -130,11 +122,11 @@ class StrategoGame extends Game with WithLogging {
    * @param newY
    */
   def movePiece(x: Int, y: Int, newX: Int, newY: Int) {
-    assert(board(x)(y) != Boundary)
-    assert(board(newX)(newY) == Empty)
+    assert(board(x)(y) != Boundary())
+    assert(board(newX)(newY) == Empty())
     logger.trace(s"Moving piece: ${board(x)(y)} from $x,$y to $newX,$newY")
     board(newX)(newY) = board(x)(y)
-    board(x)(y) = Empty
+    board(x)(y) = Empty()
   }
 
   /**
@@ -151,8 +143,9 @@ class StrategoGame extends Game with WithLogging {
       case piece: BluePiece =>
         getBlueSideboardFor(piece.value) += piece
     }
-    board(x)(y) = Empty
+    board(x)(y) = Empty()
   }
+
 
   def getRedSideboardFor(value: Int) = {
     redSideboard(value-1)
@@ -172,18 +165,18 @@ class StrategoGame extends Game with WithLogging {
     val pieces = new mutable.ArrayBuffer[T]
 
     val num: Int = value match {
-      case StrategoType.BOMB_11 => 6
-      case StrategoType.FLAG_12 => 1
-      case StrategoType.SPY_1 => 1
-      case StrategoType.SCOUT_2 => 6
-      case StrategoType.MINER_3 => 5
-      case StrategoType.SERGENT_4 => 5
-      case StrategoType.LIEUTENANT_5 => 4
-      case StrategoType.CAPTAIN_6 => 4
-      case StrategoType.MAJOR_7 => 3
-      case StrategoType.COLONEL_8 => 2
-      case StrategoType.GENERAL_9 => 1
-      case StrategoType.MARSHAL_10 => 1
+      case StrategoTypes.BOMB_11 => 6
+      case StrategoTypes.FLAG_12 => 1
+      case StrategoTypes.SPY_1 => 1
+      case StrategoTypes.SCOUT_2 => 6
+      case StrategoTypes.MINER_3 => 5
+      case StrategoTypes.SERGENT_4 => 5
+      case StrategoTypes.LIEUTENANT_5 => 4
+      case StrategoTypes.CAPTAIN_6 => 4
+      case StrategoTypes.MAJOR_7 => 3
+      case StrategoTypes.COLONEL_8 => 2
+      case StrategoTypes.GENERAL_9 => 1
+      case StrategoTypes.MARSHAL_10 => 1
       case _ =>
         throw new IllegalArgumentException("Cannot convert: " + value)
     }
@@ -211,26 +204,26 @@ class StrategoGame extends Game with WithLogging {
     (0 to 11).foreach {
       i =>
         // set top boundary
-        board(i)(0) = Boundary
+        board(i)(0) = Boundary()
         //bottom
-        board(i)(11) = Boundary
+        board(i)(11) = Boundary()
         //left side
-        board(0)(i) = Boundary
+        board(0)(i) = Boundary()
         //right side
-        board(11)(i) = Boundary
+        board(11)(i) = Boundary()
     }
 
     //lakes
-    board(3)(5) = Boundary
-    board(3)(6) = Boundary
-    board(4)(5) = Boundary
-    board(4)(6) = Boundary
+    board(3)(5) = Boundary()
+    board(3)(6) = Boundary()
+    board(4)(5) = Boundary()
+    board(4)(6) = Boundary()
 
     //lakes
-    board(7)(5) = Boundary
-    board(7)(6) = Boundary
-    board(8)(5) = Boundary
-    board(8)(6) = Boundary
+    board(7)(5) = Boundary()
+    board(7)(6) = Boundary()
+    board(8)(5) = Boundary()
+    board(8)(6) = Boundary()
   }
 
   /**
@@ -247,7 +240,7 @@ class StrategoGame extends Game with WithLogging {
     var yes = false;
     breakable {
       for (checkX <- (x to newX by byX); checkY <- (y to newY by byY)) {
-        if (board(checkX)(checkY) == Boundary) {
+        if (board(checkX)(checkY) == Boundary()) {
           yes = true
           break
         }
@@ -264,7 +257,7 @@ class StrategoGame extends Game with WithLogging {
     assert(redPlayer != null)
     assert(bluePlayer != null)
     currentPlayer = redPlayer
-    board = Array.fill[StrategoType](12, 12)(Empty)
+    board = Array.fill[StrategoType](12, 12)(Empty())
     initBoundaries(board)
 
     blueSideboard = Array.ofDim(12)
@@ -397,7 +390,7 @@ class StrategoGame extends Game with WithLogging {
    * @return
    */
   def isOnRedSide(x: Int, y: Int): Boolean = {
-    if (board(x)(y) == Boundary) return false
+    if (board(x)(y) == Boundary()) return false
     if (y <= 4)
       true
     else
@@ -411,10 +404,38 @@ class StrategoGame extends Game with WithLogging {
    * @return
    */
   def isOnBlueSide(x: Int, y: Int): Boolean = {
-    if (board(x)(y) == Boundary) return false
+    if (board(x)(y) == Boundary()) return false
     if (y >= 7)
       true
     else
       false
+  }
+
+  def maskBoard(user: User): StrategoGame.this.type#Board = {
+    board.map {
+      row => row.map {
+        element =>
+          element match {
+            case _:RedPiece if !user.equals(redPlayer) =>
+              new RedPiece(UNKNOWN_13)
+            case _:BluePiece if !user.equals(bluePlayer) =>
+              new BluePiece(UNKNOWN_13)
+            case _ =>
+              element
+          }
+      }
+    }
+  }
+
+  def mask(user: User):StrategoGame = {
+    val game = new StrategoGame
+    game.setBluePlayer(bluePlayer)
+    game.setRedPlayer(redPlayer)
+    game.setCurrentPlayer(currentPlayer)
+    game.setBoard(maskBoard(user))
+    game.setActionList(actionList.map(_.mask(user)))
+    game.setStrategoState(strategoState)
+    game.setState(state)
+    game
   }
 }

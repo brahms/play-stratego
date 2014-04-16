@@ -4,7 +4,7 @@ import com.fasterxml.jackson.annotation.{JsonTypeInfo, JsonSubTypes}
 import scala.beans.BeanProperty
 import brahms.model.User
 import com.fasterxml.jackson.annotation.JsonSubTypes.Type
-import brahms.model.stratego.StrategoType.StrategoPiece
+import brahms.model.stratego.StrategoTypes.StrategoPiece
 import brahms.util.WithLogging
 
 @JsonTypeInfo(use=JsonTypeInfo.Id.NAME, include=JsonTypeInfo.As.PROPERTY, property="type")
@@ -59,7 +59,7 @@ abstract class StrategoAction extends WithLogging {
   def isValidMove(x: Int, y: Int, newX: Int, newY: Int, piece: StrategoPiece) = {
     if (isDiagonal(x,y,newX,newY))
       false
-    else if(piece.value != StrategoType.SCOUT_2 && distance(x,y,newX,newY) >1)
+    else if(piece.value != StrategoTypes.SCOUT_2 && distance(x,y,newX,newY) >1)
       false
     else if (outOfBounds(x,y) || outOfBounds(newX,newY))
       false

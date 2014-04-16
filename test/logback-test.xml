@@ -19,8 +19,9 @@
 
     <logger name="play" level="INFO" />
     <logger name="application" level="INFO" />
+    <logger name="brahms" level="trace" />
 
-    <root level="trace">
+    <root level="info">
         <appender-ref ref="STDOUT" />
     </root>
 
