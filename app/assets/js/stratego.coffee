@@ -5,7 +5,8 @@ angular.module('app.stratego', [
     'app.stratego.functions',
     'app.stratego.actions',
     'app.stratego.controller',
-    'app.stratego.sideboards'
+    'app.stratego.sideboards',
+    'app.stratego.invoker'
 ]).factory('StrategoFactory', [
     '$log', 
     '$http', 

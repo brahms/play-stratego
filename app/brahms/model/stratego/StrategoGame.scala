@@ -9,6 +9,8 @@ import brahms.util.WithLogging
 import scala.util.control.Breaks._
 import com.fasterxml.jackson.annotation.{JsonView, JsonProperty, JsonIgnore}
 import brahms.serializer.JsonViews._
+import brahms.serializer.JsonViews
+
 object StrategoGame extends WithLogging {
 
 }
@@ -25,18 +27,21 @@ class StrategoGame extends Game {
   type Board = Array[Array[StrategoType]]
 
   @BeanProperty
+  @JsonView(Array(classOf[JsonViews.Private]))
   var board: Board = _
 
   /**
    * The blue side board is where blue pieces start the game, or end up after death
    */
   @BeanProperty
+  @JsonView(Array(classOf[JsonViews.Private]))
   var blueSideboard: Array[mutable.ArrayBuffer[BluePiece]] = _
 
   /**
    * The red side board is where red pieces start the game or end up after death
    */
   @BeanProperty
+  @JsonView(Array(classOf[JsonViews.Private]))
   var redSideboard: Array[mutable.ArrayBuffer[RedPiece]] = _
 
   /**

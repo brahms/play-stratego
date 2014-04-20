@@ -117,13 +117,16 @@ angular.module('app.controllers', ['ngRoute', 'app.stratego'])
             constructor: (scope, log, http, StrategoFactory) ->
                 scope.ctrl = "CurrentGameCtrl"
                 scope.liveGame = false
-                angular.element('canvas').ready ( ->
-                    @controller = new StrategoFactory.StrategoController()
-                    @board = new StrategoFactory.StrategoBoard('canvas')
-                    @board.init()
-                    @controller.registerBoard(@board)
-                    @board.registerController(@controller)
-                )
+                angular.element('canvas').ready () =>
+                    # @controller = new StrategoFactory.StrategoController('534f32eeb9683ad8632221a9')
+                    @board = new StrategoFactory.StrategoBoard(canvas: 'canvas', isRed: true)
+                    @board.init().finally () =>
+                        @board.draw()
+                    @ctrl = new StrategoFactory.StrategoController(board: @board, gameId: "1234")
+                    @ctrl.start()
+                        .then ->
+                            log.debug("CurrentGameCtrl started game")
+                
                 scope.createGame = ->
                     log.debug("Creating game")
                     http({

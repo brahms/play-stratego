@@ -2,7 +2,7 @@ package brahms.model.stratego
 
 import com.fasterxml.jackson.annotation.{JsonTypeInfo, JsonSubTypes}
 import scala.beans.BeanProperty
-import brahms.model.User
+import brahms.model.{GameAction, User}
 import com.fasterxml.jackson.annotation.JsonSubTypes.Type
 import brahms.model.stratego.StrategoTypes.StrategoPiece
 import brahms.util.WithLogging
@@ -14,7 +14,7 @@ import brahms.util.WithLogging
   new Type(value=classOf[StrategoActions.AttackAction], name="AttackAction"),
   new Type(value=classOf[StrategoActions.ReplacePieceAction], name="ReplacePieceAction"),
   new Type(value=classOf[StrategoActions.CommitAction], name="CommitAction")))
-abstract class StrategoAction extends WithLogging {
+abstract class StrategoAction extends GameAction with WithLogging {
   def isLegal(game: StrategoGame): Boolean
   def invoke(game: StrategoGame) : Unit = {
     game.actionList += this
@@ -29,8 +29,6 @@ abstract class StrategoAction extends WithLogging {
    */
   def mask(user: User) : StrategoAction = this
 
-  @BeanProperty
-  var actionId: Int = _
 
   protected def outOfBounds(x: Int, y:Int): Boolean = {
     if (x > 11 || x < 1) true

@@ -155,7 +155,7 @@ object StrategoActions {
       if(this.user.equals(user))
         this
       else
-        PlacePieceAction(this.user, x, y, piece.mask)
+        PlacePieceAction(this.user, x, y, piece.mask).withActionId(getActionId)
     }
 
     override def isLegal(game: StrategoGame): Boolean = {

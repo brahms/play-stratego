@@ -1,7 +1,6 @@
 package brahms.model
 
 import scala.beans.BeanProperty
-import brahms.model.GameState.GameState
 import org.jongo.marshall.jackson.oid.Id
 import org.bson.types.ObjectId
 import com.fasterxml.jackson.annotation.{JsonTypeInfo, JsonSubTypes}
@@ -27,6 +26,8 @@ abstract class Game {
 
   @BeanProperty
   var creator: User = _
+
+  def getActionList: Seq[GameAction]
 
   def mask(user: User) : Game
 

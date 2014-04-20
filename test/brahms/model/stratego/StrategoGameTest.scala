@@ -2,8 +2,8 @@ package brahms.model.stratego
 
 import org.scalatest.FunSuite
 import brahms.model.stratego.StrategoTypes._
-import brahms.model.User
-import brahms.serializer.Serializer
+import brahms.model.{GameState, User}
+import brahms.serializer.{JsonViews, Serializer}
 import brahms.model.stratego.StrategoActions.MoveAction
 import org.bson.types.ObjectId
 
@@ -53,6 +53,19 @@ class StrategoGameTest extends FunSuite {
     assert(game.boundaryInPath(3,10, 3, 1))
     assert(!game.boundaryInPath(1,10, 1, 1))
     assert(game.boundaryInPath(10,5, 1, 5))
+  }
+
+  test("Test some serialization") {
+    val game = new StrategoGame
+    val redPlayer = new User
+    val bluePlayer = new User
+    redPlayer.setUsername("cbrahms")
+    bluePlayer.setUsername("bla")
+    game.setState(GameState.RUNNING)
+    game.setRedPlayer(redPlayer)
+    game.setBluePlayer(bluePlayer)
+    game.init
+    println (Serializer.serializer.writerWithView(JsonViews.PUBLIC).writeValueAsString(game.mask(redPlayer)))
   }
 
 

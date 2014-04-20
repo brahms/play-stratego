@@ -11,7 +11,7 @@ libraryDependencies ++= Seq(
   "org.springframework.security" % "spring-security-web" % "3.2.3.RELEASE",
   "org.springframework.security" % "spring-security-config" % "3.2.3.RELEASE",
   "com.fasterxml.jackson.datatype" % "jackson-datatype-joda" % "2.3.2",
-  "com.fasterxml.jackson.module" %% "jackson-module-scala" % "2.3.3-SNAPSHOT",
+  "com.fasterxml.jackson.module" %% "jackson-module-scala" % "2.3.3",
   "com.github.nscala-time" %% "nscala-time" % "0.8.0",
   "org.mongodb" % "mongo-java-driver" % "2.11.4",
   "org.slf4j" % "jcl-over-slf4j" % "1.7.6",

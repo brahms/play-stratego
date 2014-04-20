@@ -1,4 +1,4 @@
-import brahms.database.UserRepository
+import brahms.database.{GameRepository, UserRepository}
 import brahms.filters.LoggingFilter
 import brahms.model.User
 import brahms.util.WithLogging
@@ -36,6 +36,10 @@ object Global extends WithFilters(LoggingFilter) with WithLogging{
         repo.save(user)
         logger.debug("Saved user: " + user)
     }
+
+    val gameRepo = context.getBean(classOf[GameRepository])
+    logger.debug("Deleting all games")
+    gameRepo.deleteAll()
 
   }
 

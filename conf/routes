@@ -4,6 +4,7 @@
 
 # Home page
 GET     /                           @controllers.Application.index
+GET     /app                        @controllers.Application.index
 GET     /app/*rest                  @controllers.Application.index2(rest)
 
 # Map static resources from the /public folder to the /assets URL path
@@ -20,10 +21,13 @@ GET     /api/users                  @controllers.api.UserController.users
 POST    /api/validate/username      @controllers.api.UserController.isUsernameUnique
 
 #Game
-GET     /games                       @controllers.api.GameController.getGames
-GET     /games/:id                   @controllers.api.GameController.getGameState(id)
-POST    /games/:id/action            @controllers.api.GameController.invokeAction(id)
-POST    /games/:id/join              @controllers.api.GameController.join(id)
-POST    /games/create                @controllers.api.GameController.createGame
+GET     /api/games                  @controllers.api.GameController.getGames
+GET     /api/games/1234             @controllers.api.GameController.getTestGameState()
+GET     /api/games/1234/actions     @controllers.api.GameController.getTestGameActions()
+GET     /api/games/:id              @controllers.api.GameController.getGameState(id)
+GET     /api/games/:id/actions      @controllers.api.GameController.getGameActions(id)
+POST    /api/games/:id/action       @controllers.api.GameController.invokeAction(id)
+POST    /api/games/:id/join         @controllers.api.GameController.join(id)
+POST    /api/games/create           @controllers.api.GameController.createGame
 
 

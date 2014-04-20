@@ -1,16 +1,25 @@
-angular.module('app.stratego.square', ['app.stratego.functions'])
-    .factory('StrategoSquare', ['$log', 'StrategoFunctions', 
-(log, StrategoFunctions) ->
+angular.module('app.stratego.square', ['app.stratego.functions', 'app.stratego.pieces'])
+    .factory('StrategoSquare', ['$log', 'StrategoFunctions', 'StrategoPieces',
+(log, StrategoFunctions, StrategoPieces) ->
     {SQUARE_WIDTH, SQUARE_HEIGHT, squareToXy} = StrategoFunctions
-    class StrategoSquare
-        constructor: (@x, @y, @board, @layer) ->
-            {x,y} = squareToXy @x, @y
-            log.debug("#{@x}/#{@y} -> #{x}/#{y}")
-            log.debug("#{x+@board.offsetx}")
-            @layerX = x + @board.offsetx
+    {StrategoPiece, RedPiece, BluePiece} = StrategoPieces
+    class StrategoSquare extends EventEmitter
+        constructor: ({x, y, layer, boardOffset, emitter}) ->
+            @x = x
+            @y = y
+            if !x? then throw "StrategoSquare x null"
+            if !y? then throw "StrategoSquare y null"
+            if !layer? then throw "StrategoSquare layer null"
+            if !boardOffset? then throw "StrategoSquare boardOffset null"
+            if !emitter? then throw "StrategoSquare emitter null"
+
+            {x,y} = squareToXy x, y
+            @layer = layer
+            @layerX = x + boardOffset
             @layerY = y
+            @emitter = emitter
             @rect = new Kinetic.Rect {
-                x: @layerX,
+                x: @layerX
                 y: @layerY
                 width: SQUARE_WIDTH
                 height: SQUARE_HEIGHT
@@ -19,32 +28,38 @@ angular.module('app.stratego.square', ['app.stratego.functions'])
             }
             @piece = null
 
-            @layer.add @rect
-            @rect.on 'mouseover', @mouseover
-            @rect.on 'mouseout', @mouseout
-            @rect.on 'click', @click
-        mouseover: =>
-            log.debug "Mosueover: #{@}"
-        mouseout: =>
-            log.debug "Mouseout: #{@}"
-        click: =>
-            log.debug "Click #{@}"
+            layer.add @rect
         toString: =>
             "StrategoSquare[#{@x}/#{@y}, Piece: #{@getPiece()}]";
         getPiece: =>
             if (@piece)
                 @piece
             else
-                0
-        onPieceDropped: (piece) ->
-            log.debug("onPieceDropped: piece: #{piece} this: #{@}")
+                StrategoPiece.Empty
         setPiece: (piece) =>
+            log.debug("#{@} setPiece: #{piece}")
             @piece = piece
-            log.debug("#{@toString()} Adding piece: #{@getPiece()}")
-            @piece.setSquare(@)
-        initPiece: (@piece) =>
-            @setPiece(@piece)
-            @piece.addToLayer(@layer)
+            @piece.addToLayer {
+                layer: @layer
+                x: @layerX
+                y: @layerY
+                emitter: @emitter
+            }
+        hasRedPiece: ->
+            if @piece and @piece instanceof RedPiece
+                true
+            else
+                false
+        hasBluePiece: ->
+            if @piece and @piece instanceof BluePiece
+                true
+            else
+                false
+        draggableOn: ->
+            if @piece then @piece.draggableOn()
+        draggableOff: ->
+            if @piece.then then @piece.draggableOff()
+
         intersects: (layerX, layerY) ->
             x1 = @rect.x()
             x2 = x1 + @rect.width()

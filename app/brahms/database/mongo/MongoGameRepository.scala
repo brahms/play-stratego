@@ -60,6 +60,6 @@ class MongoGameRepository @Inject()(jongo: Jongo) extends AbstractMongoRepositor
   }
 
   override def findPending: Seq[Game] = {
-    games.find("{state: #}", GameState.PENDING.toString).as(classOf[Game])
+    games.find("{state: #}", GameState.PENDING.toString).as(classOf[Game]).asScala.toSeq
   }
 }
