@@ -37,14 +37,19 @@ angular.module('app.stratego.square', ['app.stratego.functions', 'app.stratego.p
             else
                 StrategoPiece.Empty
         setPiece: (piece) =>
+            if !piece? then throw "#{@} setPiece piece null"
+            if piece not instanceof StrategoPiece  then throw "#{@} setPiece #{piece} not stratego piece"
             log.debug("#{@} setPiece: #{piece}")
             @piece = piece
-            @piece.addToLayer {
+            promise = @piece.addToLayer {
                 layer: @layer
                 x: @layerX
                 y: @layerY
                 emitter: @emitter
             }
+            @piece.setSquare(@)
+            promise
+
         hasRedPiece: ->
             if @piece and @piece instanceof RedPiece
                 true
@@ -59,6 +64,11 @@ angular.module('app.stratego.square', ['app.stratego.functions', 'app.stratego.p
             if @piece then @piece.draggableOn()
         draggableOff: ->
             if @piece.then then @piece.draggableOff()
+        hasPiece: ->
+            if @piece then true
+            else false
+        setEmpty: ->
+            @piece = null
 
         intersects: (layerX, layerY) ->
             x1 = @rect.x()

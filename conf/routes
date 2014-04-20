@@ -31,3 +31,7 @@ POST    /api/games/:id/join         @controllers.api.GameController.join(id)
 POST    /api/games/create           @controllers.api.GameController.createGame
 
 
+
+#Test
+GET     /test                       controllers.TestController.test
+GET     /test2                      controllers.TestController.test2

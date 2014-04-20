@@ -6,8 +6,8 @@ angular.module('app.stratego.sideboards', ['app.stratego.actions',
     
     {StrategoPiece, BluePiece, RedPiece} = StrategoPieces
     {PlacePieceAction} = StrategoActions
-    START_X = 100
-    END_X  = 530
+    START_X = 10
+    END_X  = 450
     RED_Y = 560
     BLUE_Y = 10
     TEXT_OFFSET_X = 20
@@ -28,6 +28,7 @@ angular.module('app.stratego.sideboards', ['app.stratego.actions',
             @layer = layer
             @emitter = emitter
             @promise = defer.promise
+            @draggable = false
             if !color? then throw "SideboardSquare Null color"
             if !value? then throw "SideboardSquare Null value"
             if !count? then throw "SideboardSquare Null count"
@@ -94,16 +95,25 @@ angular.module('app.stratego.sideboards', ['app.stratego.actions',
         incrementCount: () =>
             @count = @count + 1
             @countText.text(@count)
+            if @draggable then @draggableImage.draggable(true)
         draggableOn: =>
             if @count > 0  
                 log.debug("#{@} enabling dragging")
                 @draggableImage.draggable(true)
+            @draggable = true
         draggableOff: =>
             @draggableImage.draggable(false)
+            @draggable = false
         getDraggedX: ->
             @draggableImage.x()
         getDraggedY: ->
             @draggableImage.y()
+        setCountZero: ->
+            @count = 0
+            @draggableOff()
+            @countText.text(0)
+        getImage: ->
+            @draggableImage
 
         toString: =>
             "SideboardSquare[#{@color}#{@value} count: #{@count}]"
@@ -116,7 +126,7 @@ angular.module('app.stratego.sideboards', ['app.stratego.actions',
 
 
 
-    class StrategoSideboard extends EventEmitter
+    class StrategoSideboard
         constructor: ({color, layer, counts, emitter}) ->
             @color = color
             @squares = {}
@@ -125,9 +135,13 @@ angular.module('app.stratego.sideboards', ['app.stratego.actions',
             if !color? then throw "StrategoSideboard Null color"
             if !layer? then throw "StrategoSideboard Null layer"
             if !emitter? then throw "StrategoSideboard Null emitter"
+            if !emitter.emit? then throw "StrategoSideboard Null emitter.emit"
+        incrementSideboardCount: (piece) ->
+            value = if piece instanceof StrategoPiece then piece.value else piece
+            @squares[value].incrementCount()
         decrementSideboardCount: (piece) ->
-            if (piece.color != @color) then throw "#{@} decrementSideboardCount color does not match"
-            @squares[piece.value].decrementCount()
+            value = if piece instanceof StrategoPiece then piece.value else piece
+            @squares[value].decrementCount()
         init: ->
             log.debug("Init: #{@}")
             promises = []
@@ -149,9 +163,9 @@ angular.module('app.stratego.sideboards', ['app.stratego.actions',
               when StrategoPiece.BOMB then 6
               when StrategoPiece.FLAG then 1
               when StrategoPiece.SPY then 1
-              when StrategoPiece.SCOUT then 6
+              when StrategoPiece.SCOUT then 8
               when StrategoPiece.MINER then 5
-              when StrategoPiece.SERGENT then 5
+              when StrategoPiece.SERGENT then 4
               when StrategoPiece.LIEUTENANT then 4
               when StrategoPiece.CAPTAIN then 4
               when StrategoPiece.MAJOR then 3
@@ -166,6 +180,13 @@ angular.module('app.stratego.sideboards', ['app.stratego.actions',
             log.debug "#{@} disableDragging"
             for val, square of @squares
                 square.draggableOff()
+        getCount: (value) ->
+            @squares[value].count
+        initForRunningPhase: ->
+            for k, square of @squares
+                square.setCountZero()
+        getImage: (value) ->
+            @squares[value].getImage()
 
 
     class RedSideboard extends StrategoSideboard

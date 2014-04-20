@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>QUnit Example</title>
+    <link rel="stylesheet" href="http://code.jquery.com/qunit/qunit-1.14.0.css">
+    <!-- Bootstrap -->
+    <link href="@routes.Assets.at("css/bootstrap.min.css")" rel="stylesheet">
+    <!-- Bootstrap -->
+    <link href="@routes.Assets.at("css/jumbotron.css")" rel="stylesheet">
+    <link href="@routes.Assets.at("css/app.css")" rel="stylesheet">
+
+    <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
+    <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+    <!--[if lt IE 9]>
+    <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+    <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+    -->
+</head>
+<body>
+<div id="qunit"></div>
+<div id="qunit-fixture"></div>
+<div class="container">
+    <div id="canvas" class="canvas"></div>
+    <button>Hi</button>
+</div>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js"></script>
+<script src="@routes.Assets.at("js/lib/bootstrap.min.js")"></script>
+<script src="http://code.jquery.com/qunit/qunit-1.14.0.js"></script>
+<script src="@routes.Assets.at("js/lib/EventEmitter.min.js")"></script>
+<script src="@routes.Assets.at("js/lib/kinetic-v5.1.0.min.js")"></script>
+<script src="@routes.Assets.at("js/lib/angular/angular.js")"></script>
+<script src="@routes.Assets.at("js/stratego.js")"></script>
+<script src="@routes.Assets.at("js/stratego/board.js")"></script>
+<script src="@routes.Assets.at("js/stratego/pieces.js")"></script>
+<script src="@routes.Assets.at("js/stratego/square.js")"></script>
+<script src="@routes.Assets.at("js/stratego/functions.js")"></script>
+<script src="@routes.Assets.at("js/stratego/actions.js")"></script>
+<script src="@routes.Assets.at("js/stratego/controller.js")"></script>
+<script src="@routes.Assets.at("js/stratego/sideboards.js")"></script>
+<script src="@routes.Assets.at("js/stratego/invoker.js")"></script>
+<script src="@routes.Assets.at("test/strategoTests.js")"></script>
+</body>
+</html>

@@ -161,9 +161,11 @@ class GameController extends AbstractController {
   def generateGameState: Game = {
 
     val game = new StrategoGame
+    game.state = GameState.RUNNING
     game.setRedPlayer(red)
     game.setBluePlayer(blue)
     game.init
+
 
     var action: StrategoAction = PlacePieceAction(red, 1, 1, new RedPiece(StrategoTypes.GENERAL_9))
     action.invoke(game)

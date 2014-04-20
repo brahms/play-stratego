@@ -19,51 +19,73 @@ angular.module('app.stratego.pieces', ['app.stratego.functions'])
             if !emitter? then throw "StrategoPiece emitter null"
             @emitter = emitter
             defer = Q.defer()
-            imgElement = new Image()
-            imgElement.src = @_getImageUrl()
-            imgElement.onload = => 
-                @image = new Kinetic.Image {
-                    image: imgElement
-                    draggable: false
-                    x: x
-                    y: y
-                    width: SQUARE_HEIGHT,
-                    height: SQUARE_WIDTH
-                }
-                layer.add(@image)
-                layer.draw()
-                log.debug("#{@} Loaded")
-                @image.on('dragend', @_onMove)
-                log.debug "#{@} loaded, resolving promise"
+            if not @image
+                imgElement = new Image()
+                imgElement.src = @_getImageUrl()
+                imgElement.onload = => 
+                    @image = new Kinetic.Image {
+                        image: imgElement
+                        draggable: false
+                        x: x
+                        y: y
+                        width: SQUARE_HEIGHT
+                        height: SQUARE_WIDTH
+                    }
+                    layer.add(@image)
+                    layer.draw()
+                    log.debug("#{@} Loaded")
+                    @image.on('dragend', @_onMove)
+                    log.debug "#{@} loaded, resolving promise"
+                    defer.resolve()
+            else 
+                log.debug("Already loaded")
+                @image.x(x)
+                @image.y(y)
+                @image.getLayer().draw()
                 defer.resolve()
             defer.promise
         getImageKey: => 
             "#{@color}#{@value}"
         toString: =>
             "StrategoPiece[#{@getImageKey()} #{@image?.x()}/#{@image?.y()}]"
-        setSquare: (@square) ->
+        setSquare: (square) ->
+            @square = square
             log.debug("setSquare: #{@square}")
+        getSquare: -> @square
         getCenter: => {
                 x: (@image.x() + (@image.width()/2))
                 y: (@image.y() + (@image.height()/2))
             }
+        show: ->
+            log.debug("#{@} show")
+            @image.visible(true)
+        hide: ->
+            log.debug("#{@} hide")
+            @image.visible(false)
+            @image.getLayer().draw()
         _getImageUrl: =>
             "#{ASSETS}images/stratego/#{@color}#{@value}.png"
         reset: =>
             log.debug("#{@} reset")
-            @image.x(@square.layerX)
-            @image.y(@square.layerY)
+            if (@image and @square)
+                @image.x(@square.layerX)
+                @image.y(@square.layerY)
+                @image.getLayer().draw()
         draggableOn: ->
             @image.draggable(true)
         draggableOff: ->
             @image.draggable(false)
-        kill: () ->
+
+        kill: ->
             log.debug("#{@} kill")
-            layer.remove(image)
+            if @image
+                @image.destroy()
+                @image = null
+
 
         _onMove: =>
             log.debug("#{@} _onMove: (#{@image.x()}, #{@image.y()}")
-            @emitter.emit('move', @)
+            @emitter.emit('move', @, @getCenter())
 
 
     class BluePiece extends StrategoPiece

@@ -1,6 +1,6 @@
 angular.module('app.stratego.actions', ['app.stratego.pieces'])
-    .factory('StrategoActions', ['$log', 'StrategoPieces',
-(log, StrategoPieces) ->
+    .factory('StrategoActions', ['$q', '$log', 'StrategoPieces',
+(Q, log, StrategoPieces) ->
     {StrategoPiece} = StrategoPieces
     class StrategoAction
         constructor: ->
@@ -8,6 +8,7 @@ angular.module('app.stratego.actions', ['app.stratego.pieces'])
             throw "isLegal Not implemented"
         apply: (board) ->
             throw "apply Not Implemented"
+        invoke: (board) -> @apply(board)
         toJson: (json) ->
             throw "toJson Not implemented"
         fromJson: (json) ->
@@ -25,11 +26,23 @@ angular.module('app.stratego.actions', ['app.stratego.pieces'])
         action
 
     class MoveAction extends StrategoAction
-        constructor: (@x, @y, @newX, @newY) ->
+        constructor: ({x, y, newX, newY}) ->
+            @x = x
+            @y = y
+            @newX = newX
+            @newY = newY
         isLegal: (board) ->
-            throw "isLegal Not implemented"
+            if board.isOutOfBounds(@newX, @newY) then return false
+            piece = board.getPiece(@x, @y)
+            maxDist = 1
+            if (piece.value = StrategoPiece.SCOUT) then maxDist = 10
+            if (board.getDistance(@x, @y, @newX, @newY) > maxDist) then return false
+            if (board.isThroughLakes(@x, @y, @newX, @newY)) then return false
         apply: (board) ->
-            throw "apply Not Implemented"
+            if (board.animationsEnabled)
+                board.animatedMove(@x, @y, @newX, @newY)
+            else 
+                board.movePiece(@x, @y, @newX, @newY)
         toJson: (json) -> {
                 type: 'MoveAction'
                 x: @x
@@ -47,11 +60,29 @@ angular.module('app.stratego.actions', ['app.stratego.pieces'])
             "MoveAction[user: #{@user}, x: #{@x}, y: #{@y} newX: #{@newX}, newY: #{@newY}"
 
     class AttackAction extends StrategoAction
-        constructor: (@user, @x, @y, @newX, @newY) ->
+        constructor: ({user, x, y, newX, newY, attacker, defender, result}) ->
+            @user = user
+            @x = x
+            @y = y
+            @newX = newX
+            @newY = newY
+            @attacker = attacker
+            @defender = defender
+            @result = result
+
         isLegal: (board) ->
-            throw "isLegal Not implemented"
+            if (board.isOutOfBounds(@newX, @newY)) then return false
+            piece = board.getPiece(@x, @y)
+            if piece.value == 13 then return false
+            defender = board.getPiece(@newX, @newY)
+            if defender.value != 13 then return false
+
+            true
         apply: (board) ->
-            throw "apply Not Implemented"
+            if board.animationsEnabled
+                board.animatedKill(@)
+            else
+                board.killPiece(@)
         toJson: (json) -> {
                 type: 'AttackAction'
                 x: @x
@@ -92,10 +123,10 @@ angular.module('app.stratego.actions', ['app.stratego.pieces'])
 
             true
         apply: (board) ->
-            promise = board.placePiece(@piece, @x, @y)
-            if (@piece.value != 13) then board.decrementSideboardCount(@piece)
-            promise
+            board.setEmptyAndUpdateSideboard(@x, @y)
 
+            promise = board.placePieceAndUpdateSideboard(@piece, @x, @y)
+            promise
         toJson: (json) -> {
             type: 'PlacePieceAction'
             x: @x
@@ -111,11 +142,26 @@ angular.module('app.stratego.actions', ['app.stratego.pieces'])
             "PlacePieceAction[user: #{@user}, x:#{@x} y:#{@y} piece:#{@piece}]"
 
     class ReplacePieceAction extends StrategoAction
-        @constructor: (@x, @y, @newX, @newY) ->
+        constructor: ({user, x, y, newX, newY}) ->
+            @user = user
+            @x = x
+            @y = y
+            @newX = newX
+            @newY = newY
         isLegal: (board) ->
-            throw "isLegal Not implemented"
+            not board.isOutOfBounds(@newX, @newY) and board.isOnUsersSide(@newX, @newY)
         apply: (board) ->
-            throw "apply Not Implemented"
+            if !@x? then throw "ReplacePieceAction x null"
+            if !@y? then throw "ReplacePieceAction y null"
+            if !@newX? then throw "ReplacePieceAction newX null"
+            if !@newY? then throw "ReplacePieceAction newY null"
+            if !@user? then throw "ReplacePieceAction user null"
+            defer = Q.defer()
+            defer.resolve()
+            board.setEmptyAndUpdateSideboard(@newX, @newY)
+            board.movePiece(@x, @y, @newX, @newY)
+            defer.promise
+
         toJson: (json) -> {
             type: 'ReplacePieceAction'
             x: @x
@@ -133,12 +179,20 @@ angular.module('app.stratego.actions', ['app.stratego.pieces'])
 
 
     class CommitAction extends StrategoAction
-        constructor: ->
+        constructor: ({user})->
+            @user = user
         isLegal: (board) ->
-            throw "isLegal Not implemented"
+            board.phase == "PHASE_PIECES"
         apply: (board) ->
-            throw "apply Not Implemented"
-        toJson: (json) -> {}
+            if USER.username == @user.username then board.commitThisPlayer()
+            else board.commitOtherPlayer()
+
+            d = Q.defer(); d.resolve()
+
+            d.promise
+        toJson: (json) -> {
+            user: @user
+        }
         fromJson: (json) ->
             @user = json.user
 

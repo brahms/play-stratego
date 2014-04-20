@@ -173,9 +173,9 @@ class StrategoGame extends Game {
       case StrategoTypes.BOMB_11 => 6
       case StrategoTypes.FLAG_12 => 1
       case StrategoTypes.SPY_1 => 1
-      case StrategoTypes.SCOUT_2 => 6
+      case StrategoTypes.SCOUT_2 => 8
       case StrategoTypes.MINER_3 => 5
-      case StrategoTypes.SERGENT_4 => 5
+      case StrategoTypes.SERGENT_4 => 4
       case StrategoTypes.LIEUTENANT_5 => 4
       case StrategoTypes.CAPTAIN_6 => 4
       case StrategoTypes.MAJOR_7 => 3
