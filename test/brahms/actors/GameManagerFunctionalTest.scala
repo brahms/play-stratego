@@ -18,6 +18,7 @@ import brahms.model.stratego.{StrategoTypes, StrategoState, StrategoGame}
 import brahms.actors._
 import brahms.model.stratego.StrategoActions.PlacePieceAction
 import brahms.model.stratego.StrategoTypes.{BluePiece, RedPiece}
+import brahms.util.WithLogging
 
 class TestAppConfiguration extends FunctionalConfiguration {
   importClass(
@@ -38,7 +39,7 @@ class TestAppConfiguration extends FunctionalConfiguration {
 /**
  * Tests the creating of a game, and playing it from an empty test db
  */
-class GameManagerFunctionalTest extends Specification{
+class GameManagerFunctionalTest extends Specification with WithLogging {
 
   val serializer = Serializer.serializer
   val PLAYER1 = new User
@@ -87,6 +88,8 @@ class GameManagerFunctionalTest extends Specification{
       }
     "Player1 should not be able to create another game" in {
       val player = userRepo.findByUsername("player1").get
+      player.getCurrentGameId must not(beNone)
+      logger.info(serializer.writeValueAsString(player))
       val result = gameManager ? CreateGame(player, "stratego") map {
         case failure: Failed => ok
         case _ => ko("Should fail")

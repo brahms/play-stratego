@@ -4,7 +4,7 @@ import brahms.util.AbstractController
 import javax.inject.{Singleton, Named, Inject}
 import brahms.response.JsonResponse
 import brahms.requests.AuthenticatedRequest
-import play.api.mvc.Action
+import play.api.mvc.{AnyContent, Action}
 import play.api.mvc.BodyParsers._
 import brahms.database.UserRepository
 import brahms.model.User
@@ -34,5 +34,11 @@ class UserController extends AbstractController {
             JsonResponse.ok(Map("status" -> true))
         }
       }
+  }
+
+  def self = Authenticated {
+    implicit request: AuthenticatedRequest[AnyContent] =>
+      logger.debug("self: {}", request.user.toJson)
+      JsonResponse.priv(request.user)
   }
 }

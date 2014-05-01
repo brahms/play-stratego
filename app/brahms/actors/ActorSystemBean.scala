@@ -36,11 +36,11 @@ class ActorSystemBean @Inject() (ctx: ApplicationContext) {
 
   lazy val gameManager = system.actorOf(Props(SpringExt(system).ctx.getBean(classOf[GameManager])))
 
-  system.scheduler.schedule(
-    initialDelay = (1 minute),
-    interval = (30 seconds),
-    receiver = gameManager,
-    message = SaveState
-  )(Async.context)
+//  system.scheduler.schedule(
+//    initialDelay = (1 minute),
+//    interval = (30 seconds),
+//    receiver = gameManager,
+//    message = SaveState
+//  )(Async.context)
 
 }

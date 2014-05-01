@@ -2,7 +2,7 @@ package brahms.database.mongo
 
 import brahms.database.UserRepository
 import org.springframework.stereotype.Repository
-import brahms.model.User
+import brahms.model.{GameStats, User}
 import scala.collection.JavaConverters._
 import org.bson.types.ObjectId
 import javax.inject.Inject
@@ -70,11 +70,42 @@ class MongoUserRepository @Inject() (jongo: Jongo) extends AbstractMongoReposito
   }
 
   override def findOne(id: ObjectId): Option[User] = {
+    logger.debug("fineOne: {}", id)
     Option(users.findOne(id).as(classOf[User]))
   }
 
   override def save[S <: User](entity: S): S = {
+    logger.debug("Saving {}", entity.toJson)
     users.save(entity)
+    logger.debug("Saved")
     entity
+  }
+
+  override def updateUserStats(stats: GameStats): Unit = {
+    val users = findAll(stats.players.map(_.getId.toString))
+    logger.debug(s"Updating User Stats users: $users with stats $stats")
+    users.foreach {
+      user =>
+        user.playedGames :+= stats.game.getId.toString
+        user.currentGameId = None
+    }
+
+    stats.winners.foreach {
+      winner =>
+        users.find(_.equals(winner)).get.wonGames :+= stats.game.getId.toString
+    }
+
+    stats.losers.foreach {
+      loser =>
+        users.find(_.equals(loser)).get.lostGames :+= stats.game.getId.toString
+    }
+
+    stats.draws.foreach {
+      draw =>
+        users.find(_.equals(draw)).get.drawnGames :+= stats.game.getId.toString
+    }
+
+    logger.debug("Saving {} users", users.size)
+    save(users)
   }
 }

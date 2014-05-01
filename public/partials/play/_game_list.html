@@ -1,26 +1,29 @@
   <div ng-controller="GameListCtrl" ng-show="loggedIn">
 
-                <h4>Games</h4>
+    <button ng-click="createGame" class="center-block btn-primary btn" >Create Game</button>
 
-                <div class="games-list">
+    <h4>Play an existing game</h4>
 
-                    <div class="row game" ng-repeat="game in shownGames | limitTo: totalGames" class="list-group-item">
+    <div class="games-list">
 
-                        <div style="float: left;" class="left">
-                            <img style="float: left;" class="img-rounded" alt="140x140" src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxNDAiIGhlaWdodD0iMTQwIj48cmVjdCB3aWR0aD0iMTQwIiBoZWlnaHQ9IjE0MCIgZmlsbD0iI2VlZSI+PC9yZWN0Pjx0ZXh0IHRleHQtYW5jaG9yPSJtaWRkbGUiIHg9IjcwIiB5PSI3MCIgc3R5bGU9ImZpbGw6I2FhYTtmb250LXdlaWdodDpib2xkO2ZvbnQtc2l6ZToxMnB4O2ZvbnQtZmFtaWx5OkFyaWFsLEhlbHZldGljYSxzYW5zLXNlcmlmO2RvbWluYW50LWJhc2VsaW5lOmNlbnRyYWwiPjE0MHgxNDA8L3RleHQ+PC9zdmc+" style="width: 140px; height: 140px;">
-                            <div>Name:</div>
-                            <p style="float: left;" class="name">{{game.name}}</p>
-                        </div>
+        <div class="row game" ng-repeat="game in shownGames | limitTo: totalGames" class="list-group-item">
 
-
-                        <div style="float: left;" class="right">
-                            <a href="#">PLAY</a>
-                        </div>
-                        <div style="clear:both" />
-                    </div>
-
-
-                </div>
-                <!-- Pagination -->
-                <pagination class="dontselect" max-size="limitPages" items-per-page="gamesPerPage" boundary-links="true" total-items="totalGames" page="currentPage"></pagination>
+            <div style="float: left;" class="left">
+                <img style="float: left;" class="img-rounded" alt="140x140" src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxNDAiIGhlaWdodD0iMTQwIj48cmVjdCB3aWR0aD0iMTQwIiBoZWlnaHQ9IjE0MCIgZmlsbD0iI2VlZSI+PC9yZWN0Pjx0ZXh0IHRleHQtYW5jaG9yPSJtaWRkbGUiIHg9IjcwIiB5PSI3MCIgc3R5bGU9ImZpbGw6I2FhYTtmb250LXdlaWdodDpib2xkO2ZvbnQtc2l6ZToxMnB4O2ZvbnQtZmFtaWx5OkFyaWFsLEhlbHZldGljYSxzYW5zLXNlcmlmO2RvbWluYW50LWJhc2VsaW5lOmNlbnRyYWwiPjE0MHgxNDA8L3RleHQ+PC9zdmc+" style="width: 140px; height: 140px;">
+                <div>Name:</div>
+                <p style="float: left;" class="name">{{game.name}}</p>
             </div>
+
+
+            <div style="float: left;" class="right">
+                <a href="#">PLAY</a>
+            </div>
+            <div style="clear:both" />
+        </div>
+
+
+    </div>
+    <!-- Pagination -->
+    <pagination class="dontselect" max-size="limitPages" items-per-page="gamesPerPage" boundary-links="true" total-items="totalGames" page="currentPage"></pagination>
+</div>
+

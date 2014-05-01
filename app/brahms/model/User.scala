@@ -2,8 +2,8 @@ package brahms.model
 import scala.beans.{BeanProperty, BooleanBeanProperty}
 import org.springframework.security.crypto.bcrypt.BCrypt
 import brahms.util.WithLogging
-import com.fasterxml.jackson.annotation.JsonView
-import brahms.serializer.JsonViews
+import com.fasterxml.jackson.annotation.{JsonProperty, JsonView}
+import brahms.serializer.{Serializer, JsonViews}
 import org.jongo.marshall.jackson.oid.Id
 import org.bson.types.ObjectId
 
@@ -41,14 +41,44 @@ class User {
   var username: String = _;
 
   @BeanProperty
-  @JsonView(Array(classOf[JsonViews.Private]))
+  @JsonView(Array(classOf[JsonViews.ServerOnly]))
   var password: String = _;
 
   @BooleanBeanProperty
   var admin: Boolean = _;
 
   @BeanProperty
+  @JsonView(Array(classOf[JsonViews.Public]))
   var currentGameId: Option[ObjectId] = None
+
+  @BooleanBeanProperty
+  @JsonView(Array(classOf[JsonViews.ServerOnly]))
+  var simple: Boolean = false;
+
+  @BeanProperty
+  @JsonView(Array(classOf[JsonViews.Private]))
+  var wonGames: Seq[String] = Seq()
+  @BeanProperty
+  @JsonView(Array(classOf[JsonViews.Private]))
+  var lostGames: Seq[String] = Seq()
+  @BeanProperty
+  @JsonView(Array(classOf[JsonViews.Private]))
+  var drawnGames: Seq[String] = Seq()
+  @BeanProperty
+  @JsonView(Array(classOf[JsonViews.Private]))
+  var playedGames: Seq[String] = Seq()
+
+  @JsonProperty
+  def stats = {
+    if (isSimple)  Map (
+      "won" -> wonGames.length,
+      "lost" -> lostGames.length,
+      "drawn" -> drawnGames.length,
+      "played" -> playedGames.length
+    )
+    else null
+  }
+
 
   def validatePassword(password: String) : Boolean = BCrypt.checkpw(password, this.password)
 
@@ -59,6 +89,7 @@ class User {
     val user = new User
     user.setId(id)
     user.setUsername(username)
+    user.setSimple(true)
     user
   }
 
@@ -70,6 +101,10 @@ class User {
         false
     }
 
+  }
+
+  def toJson: String = {
+    Serializer.serializer.writeValueAsString(this)
   }
 
 

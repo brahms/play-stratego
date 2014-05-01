@@ -1,6 +1,6 @@
 package brahms.model.stratego
 
-import brahms.model.{GameState, GameAction, User, Game}
+import brahms.model._
 import scala.beans.{BooleanBeanProperty, BeanProperty}
 import scala.collection.mutable
 import brahms.model.stratego.StrategoTypes._
@@ -10,6 +10,9 @@ import scala.util.control.Breaks._
 import com.fasterxml.jackson.annotation.{JsonView, JsonProperty, JsonIgnore}
 import brahms.serializer.JsonViews._
 import brahms.serializer.JsonViews
+import brahms.model.stratego.StrategoTypes.Boundary
+import brahms.model.stratego.StrategoTypes.Empty
+import org.joda.time.DateTime
 
 object StrategoGame extends WithLogging {
 
@@ -63,7 +66,10 @@ class StrategoGame extends Game {
   var currentPlayer: User = _
 
   @BeanProperty
-  var winningPlayer: User = _
+  var winningPlayer: Option[User] = _
+
+  @BeanProperty
+  var losingPlayer: Option[User] = _
 
   /**
    * True when the blue player has sent a commit action
@@ -462,4 +468,47 @@ class StrategoGame extends Game {
   }
 
   override def getType: String = "Stratego"
+
+  /**
+   * If the game manager detects a timeout, the game should take care of handling it
+   * @param user
+   */
+  override def handleTimeout(user: User): Unit = {
+    getState match {
+      case GameState.PENDING =>
+        logger.debug("Timeout for stratego game in the pending state {}", this)
+      case GameState.RUNNING =>
+        losingPlayer = Some(user)
+        if (losingPlayer.equals(redPlayer)) {
+          winningPlayer = Some(bluePlayer)
+        }
+        else {
+          winningPlayer = Some(redPlayer)
+        }
+        logger.debug(s"Timeout for $losingPlayer, forfeits. $winningPlayer wins!")
+      case GameState.FINISHED =>
+        logger.error("Handle timeout called when game was already finished")
+    }
+
+    setState(GameState.FINISHED)
+
+  }
+
+  /**
+   * When the game is over, this should return the players who won, lost and drawed
+   * @return
+   */
+  override def gameStats: GameStats = {
+    if (state == GameState.FINISHED) {
+        GameStats(
+          players = Seq(redPlayer.toSimpleUser, bluePlayer.toSimpleUser),
+          winners =  Seq(winningPlayer.get.toSimpleUser),
+          losers = Seq(losingPlayer.get.toSimpleUser),
+          game = this
+        )
+    }
+    else {
+      throw new IllegalArgumentException("GameStats called on non finished game")
+    }
+  }
 }

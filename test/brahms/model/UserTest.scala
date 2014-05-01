@@ -21,6 +21,7 @@ class UserTest extends FunSuite with WithTestExtras {
     user.setPassword("bla")
     user.setAdmin(true)
     user.setId(new ObjectId())
+    user.setCurrentGameId(Some(new ObjectId()))
     val json = Serializer.serializer.writeValueAsString(user)
     println(json)
     val newUser = Serializer.serializer.readValue(json, classOf[User])

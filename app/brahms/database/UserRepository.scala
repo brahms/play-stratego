@@ -1,6 +1,6 @@
 package brahms.database
 
-import brahms.model.User
+import brahms.model.{GameStats, User}
 import org.bson.types.ObjectId
 
 trait UserRepository {
@@ -27,4 +27,6 @@ trait UserRepository {
   def findOne(id: ObjectId): Option[User]
 
   def save[S <: User](entity: S): S
+
+  def updateUserStats(stats: GameStats): Unit
 }

@@ -1,6 +1,6 @@
 package brahms.service
 
-import javax.inject.Named
+import javax.inject.{Inject, Named}
 import org.springframework.stereotype.Service
 import brahms.model.User
 import play.api.mvc.Request
@@ -10,13 +10,16 @@ import play.api.data.Forms._
 import scala.Some
 import scala.concurrent.duration._
 import brahms.requests.AuthenticatedRequest
-
+import brahms.database.UserRepository
 
 
 @Service
 class SessionService {
   val SESSION_TOKEN = "token"
   val SESSION_EXPIRY = 24 hours
+
+  @Inject
+  var userRepo: UserRepository = _
 
   import play.api.Play.current // impliciit app
 
@@ -25,7 +28,7 @@ class SessionService {
     state.user = Some(user)
     val token = ServerSideSessions.create(state, SESSION_EXPIRY)
     request.session + (SESSION_TOKEN, token)
-    println(s"XXX startSession token $token")
+    //println(s"XXX startSession token $token")
     AuthenticatedRequest[A](user, token, request)
   }
 
@@ -37,12 +40,12 @@ class SessionService {
    * authenticate each time.
    */
   def getSession[A](request: Request[A]): Either[Exception, AuthenticatedRequest[A]] = {
-    println("XXX getSession: token->" + request.session.get(SESSION_TOKEN))
+    //println("XXX getSession: token->" + request.session.get(SESSION_TOKEN))
     for {
       token <- request.session.get(SESSION_TOKEN).toRight(new NoSessionError).right
       session <- ServerSideSessions.get(token).toRight(new ExpiredSessionError).right
       user <- session.user.toRight(new ExpiredSessionError).right
-    } yield AuthenticatedRequest(user, token, request)
+    } yield AuthenticatedRequest(userRepo.findOne(user.id).get, token, request)
 
   }
 
@@ -50,7 +53,7 @@ class SessionService {
    * This is invoked to delete any existing server-side session, e.g. when logging out.
    */
   def abandonSession[A](request: Request[A]): Request[A] = {
-    println("XXX abandonSession: "+request.session.get(SESSION_TOKEN))
+   // println("XXX abandonSession: "+request.session.get(SESSION_TOKEN))
     request.session.get(SESSION_TOKEN).map(ServerSideSessions.delete)
     request
   }

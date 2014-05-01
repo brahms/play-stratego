@@ -24,18 +24,13 @@ object Global extends WithFilters(LoggingFilter) with WithLogging{
 
     val repo = context.getBean(classOf[UserRepository])
     logger.debug("Searching for initial cbrahms user")
-    repo.findByUsername("cbrahms") match {
-      case Some(user) =>
-        logger.debug("Found " + user)
-      case _=>
-        logger.debug("Did not find a user, will create one")
-        val user = new User
-        user.setAdmin(true)
-        user.setPassword(User.encryptPassword("OneOne11"))
-        user.setUsername("cbrahms")
-        repo.save(user)
-        logger.debug("Saved user: " + user)
-    }
+
+    repo.deleteAll()
+    val user = new User
+    user.setAdmin(true)
+    user.setPassword(User.encryptPassword("OneOne11"))
+    user.setUsername("cbrahms")
+    repo.save(user)
 
     val gameRepo = context.getBean(classOf[GameRepository])
     logger.debug("Deleting all games")

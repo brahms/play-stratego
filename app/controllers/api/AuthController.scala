@@ -38,7 +38,7 @@ class AuthController extends AbstractController {
               }
               val newSession = sessionService.startSession(user, r)
               logger.debug("Starting new session: " + newSession.token)
-              JsonResponse.ok(user).withSession(sessionService.SESSION_TOKEN -> newSession.token)
+              JsonResponse.priv(user).withSession(sessionService.SESSION_TOKEN -> newSession.token)
             case _ =>
               JsonResponse.bad("Invalid login")
           }
@@ -87,7 +87,7 @@ class AuthController extends AbstractController {
                 val session = sessionService.startSession(user, request)
                 logger.debug("Creating new session: " + session.token)
 
-                JsonResponse.ok(user).withSession(sessionService.SESSION_TOKEN -> session.token)
+                JsonResponse.priv(user).withSession(sessionService.SESSION_TOKEN -> session.token)
 
               case Left(validationError) =>
                 validationError

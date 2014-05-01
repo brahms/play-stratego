@@ -94,56 +94,72 @@ angular.module('app.controllers', ['ngRoute', 'app.stratego'])
             constructor: (scope, log, http) ->
                 scope.ctrl = 'GameListCtrl'
                 games = []
-                for i in [1..100] 
+                interval = window.setInterval((() ->
+                    log.debug('List poll')
+                ), 5000)
+                for i in [1..3] 
                     games.push {
+                        id: "12345"
+                        creator: {
+                            id: "54321"
+                            username: 'cbrahms2'
+                        }
                         name: i
+                        state: "PENDING"
                     }
                 scope.shownGames = []
                 scope.totalGames = games.length
                 scope.gamesPerPage = 2
                 scope.currentPage = 1
                 scope.limitPages = 10
+                scope.createGame = -> log.info("GameListCtrl - createGame")
+                
                 resliceGames = ->
                     init = (scope.currentPage-1)*scope.gamesPerPage
                     limit = init+scope.gamesPerPage
                     log.debug("init: #{init} limit: #{limit}")
                     scope.shownGames = games.slice(init, limit)
+                
                 scope.$watch 'currentPage', (newValue, oldValue) ->
                     log.debug("Current page: #{newValue} .. old: #{oldValue}")
                     resliceGames()
+                scope.$on('$destroy', (->
+                    window.clearInterval(interval)
+                ))
+
     ])
     .controller('CurrentGameCtrl', ['$scope', '$log', '$http', 'StrategoFactory',
         class CurrentGameCtrl
             constructor: (scope, log, http, StrategoFactory) ->
                 scope.ctrl = "CurrentGameCtrl"
                 scope.liveGame = false
-                angular.element('canvas').ready () =>
-                    # @controller = new StrategoFactory.StrategoController('534f32eeb9683ad8632221a9')
-                    @board = new StrategoFactory.StrategoBoard(canvas: 'canvas', isRed: true)
-                    @board.init().finally () =>
-                        @board.draw()
-                    @ctrl = new StrategoFactory.StrategoController(board: @board, gameId: "1234")
-                    @ctrl.start()
-                        .then ->
-                            log.debug("CurrentGameCtrl started game")
+                # angular.element('canvas').ready () =>
+                #     # @controller = new StrategoFactory.StrategoController('534f32eeb9683ad8632221a9')
+                #     @board = new StrategoFactory.StrategoBoard(canvas: 'canvas', isRed: true)
+                #     @board.init().finally () =>
+                #         @board.draw()
+                #     @ctrl = new StrategoFactory.StrategoController(board: @board, gameId: "1234")
+                #     @ctrl.start()
+                #         .then ->
+                #             log.debug("CurrentGameCtrl started game")
                 
                 scope.createGame = ->
                     log.debug("Creating game")
-                    http({
-                        method: 'POST',
-                        url: '/api/games/create',
-                        data: {
-                            type: 'stratego'
-                        }
-                    }).success( (data) ->
-                        scope.liveGame = true
-                        scope.gameId = data.gameId
-                        log.debug("Created game with id: " + data.gameId)
+                    # http({
+                    #     method: 'POST',
+                    #     url: '/api/games/create',
+                    #     data: {
+                    #         type: 'stratego'
+                    #     }
+                    # }).success( (data) ->
+                    #     scope.liveGame = true
+                    #     scope.gameId = data.gameId
+                    #     log.debug("Created game with id: " + data.gameId)
                         
 
-                    ).error(->
-                        log.error("Unable to create game")
-                    )
+                    # ).error(->
+                    #     log.error("Unable to create game")
+                    # )
 
     ])
     .controller('HistoryCtrl', ['$scope', '$log', 

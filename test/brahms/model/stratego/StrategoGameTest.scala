@@ -2,7 +2,7 @@ package brahms.model.stratego
 
 import org.scalatest.FunSuite
 import brahms.model.stratego.StrategoTypes._
-import brahms.model.{GameState, User}
+import brahms.model.{Game, GameState, User}
 import brahms.serializer.{JsonViews, Serializer}
 import brahms.model.stratego.StrategoActions.{CommitAction, PlacePieceAction, MoveAction}
 import org.bson.types.ObjectId
@@ -103,7 +103,16 @@ class StrategoGameTest extends FunSuite {
     MoveAction(red, 1, 4, 1, 5).invoke(game)
     println(serializer.writeValueAsString(game.mask(red)))
 
+    val json = Serializer.serializer.writeValueAsString(game)
+    val deser = Serializer.serializer.readValue(json, classOf[Game])
 
+  }
+
+  test("deser") {
+    val json = """ { "type" : "Stratego" , "redPlayer" : { "username" : "player1" , "admin" : false , "_id" : { "$oid" : "53626176b968a30c01c636ff"} , "simple" : true , "wonGames" : [ ] , "lostGames" : [ ] , "drawnGames" : [ ] , "playedGames" : [ ] , "stats" : { "won" : 0 , "lost" : 0 , "drawn" : 0 , "played" : 0}} , "bluePlayerReady" : false , "redPlayerReady" : false , "actionList" : [ ] , "state" : "PENDING" , "creator" : { "username" : "player1" , "admin" : false , "_id" : { "$oid" : "53626176b968a30c01c636ff"} , "simple" : true , "wonGames" : [ ] , "lostGames" : [ ] , "drawnGames" : [ ] , "playedGames" : [ ] , "stats" : { "won" : 0 , "lost" : 0 , "drawn" : 0 , "played" : 0}} , "timeouts" : { "player1" : 1398956470181} , "players" : [ { "username" : "player1" , "admin" : false , "_id" : { "$oid" : "53626176b968a30c01c636ff"} , "simple" : true , "wonGames" : [ ] , "lostGames" : [ ] , "drawnGames" : [ ] , "playedGames" : [ ] , "stats" : { "won" : 0 , "lost" : 0 , "drawn" : 0 , "played" : 0}}] , "gameOver" : false , "timeoutMap" : { } , "_id" : { "$oid" : "5362617ab968a30c01c63701"} , "phase" : "PLACE_PIECES"}
+                 |"""
+    val game = Serializer.serializer.readValue(json, classOf[Game])
+    assert(true)
   }
 
 

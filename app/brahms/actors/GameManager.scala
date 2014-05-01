@@ -9,6 +9,7 @@ import brahms.database.{GameRepository, UserRepository}
 import brahms.model.stratego.{StrategoAction, StrategoGame}
 import org.bson.types.ObjectId
 import brahms.serializer.Serializer
+import org.joda.time.DateTime
 
 case class CreateGame(user: User, gameType: String)
 case class Failed(reason: String)
@@ -33,22 +34,28 @@ class GameManager @Inject() (userRepo: UserRepository, gameRepo: GameRepository)
   /**
    * In memory map of games in the running state, to speed up action invocation
    */
-  var runningGames : Map[String, Game] = Map()
+  private var pendingGames : Map[String, Game] = Map()
+  private var runningGames : Map[String, Game] = Map()
 
   def logReceiveTime(block: Receive) : Receive = {
     case some =>
       val start = System.currentTimeMillis()
-      logger.debug("Starting receive, current games list is {} long", runningGames.size)
+      logger.debug("Starting receive, current pending games list is {} long", pendingGames.size)
+      logger.debug("Starting receive, current running games list is {} long", runningGames.size)
       block(some)
-      logger.debug("Finished receive, current games list is {} long", runningGames.size)
+      logger.debug("Finished receive, current pending games list is {} long", pendingGames.size)
+      logger.debug("Finished receive, current running games list is {} long", runningGames.size)
       logger.info("Finished receive in {} ms", (System.currentTimeMillis() - start))
   }
 
   override def preStart(): Unit = {
+    logger.info("Loading pending games into cache")
+    pendingGames = gameRepo.findPending.foldLeft(Map[String, Game]())((map, game) => map + (game.id.toString -> game))
+    logger.info("Loaded {} pending games into cache", pendingGames.size)
     logger.info("Loading running games cache")
     runningGames = gameRepo.findRunning.foldLeft(Map[String, Game]())((map, game) => map + (game.id.toString -> game))
     runningGames.values.foreach({f=>assert(f.getState == GameState.RUNNING)})
-    logger.info("Loaded {} games into cache", runningGames.size)
+    logger.info("Loaded {} running games into cache", runningGames.size)
   }
 
   override def receive: Receive = logReceiveTime {
@@ -58,10 +65,15 @@ class GameManager @Inject() (userRepo: UserRepository, gameRepo: GameRepository)
       if(user.getCurrentGameId.isEmpty) {
         logger.debug("Creating stratego game for user: " + user)
         val game = new StrategoGame
-        game.setRedPlayer(user)
+        game.setRedPlayer(user.toSimpleUser)
+        game.setCreator(user.toSimpleUser)
+        game.players = Seq(user.toSimpleUser)
+        game.timeouts = Map(user.username -> (System.currentTimeMillis() + Game.TIMEOUT))
         gameRepo.save(game)
         user.setCurrentGameId(Some(game.getId))
+        logger.debug("Setting current user game to {}", Serializer.serializer.writeValueAsString(user))
         userRepo.save(user)
+        pendingGames += game.getId.toString -> game
         sender ! CreateGameSucceeded(game)
         logger.debug("Sent back CreateGameSucceeded msg ")
       }
@@ -79,13 +91,15 @@ class GameManager @Inject() (userRepo: UserRepository, gameRepo: GameRepository)
       else {
         val user = userRepo.findOne(req.user.getId).get
         if(user.getCurrentGameId.isEmpty) {
-          gameRepo.findOnePending(new ObjectId(req.gameId)) match {
+          pendingGames.get(req.gameId) match {
             case Some(game: StrategoGame) if game.state == GameState.PENDING =>
               logger.debug(s"$user joining game ${game}")
-              game.setBluePlayer(user)
+              pendingGames -= game.getId.toString
+              runningGames += (game.getId.toString -> game)
+              game.setBluePlayer(user.toSimpleUser)
               game.init
               gameRepo.save(game)
-              runningGames += (game.getId.toString -> game)
+              game.players = game.players :+ user
               user.setCurrentGameId(Some(game.getId))
               userRepo.save(user)
               sender ! JoinGameSucceeded(game)
@@ -127,7 +141,33 @@ class GameManager @Inject() (userRepo: UserRepository, gameRepo: GameRepository)
           sender ! Failed("User is not currently in a game")
       }
     case SaveState =>
-      logger.debug("Saving state")
+      logger.debug("Checking for timeouts and saving state")
+//      val timeoutCheck = System.currentTimeMillis()
+//      pendingGames.values.foreach { game =>
+//        game.timeouts.foreach { case (user: User, timeout: Long) =>
+//          if (timeout < timeoutCheck) {
+//            logger.warn(s"$user timed out in game $game")
+//            logger.warn("Game is pending, so canceling it")
+//            pendingGames -= game.id.toString
+//            game.state = GameState.CANCELED
+//            gameRepo.save(game)
+//            user.setCurrentGameId(None)
+//            logger.debug("Setting user to have no game set: {}", user)
+//            userRepo.save(user)
+//          }
+//        }
+//      }
+//      runningGames.values.foreach {  game =>
+//          game.timeouts.foreach {  case (user: User, timeout: Long) =>
+//              if (timeout < timeoutCheck) {
+//                runningGames -= game.id.toString
+//                logger.warn(s"$user timed out in game $game")
+//                game.handleTimeout(user)
+//                assert(game.isGameOver)
+//                gameRepo.save(game)
+//              }
+//          }
+//      }
       gameRepo.save(runningGames.values)
       logger.debug("Saved")
     case msg =>

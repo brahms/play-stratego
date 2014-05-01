@@ -84,7 +84,7 @@ object StrategoActions {
           if(killedFlag) {
             logger.info(s"$user has won the StrategoGame!")
             game.state = GameState.FINISHED
-            game.winningPlayer = user
+            game.winningPlayer = Some(user)
           }
       }
 

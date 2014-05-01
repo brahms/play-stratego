@@ -119,7 +119,7 @@ class GameController extends AbstractController with InitializingBean {
     implicit request =>
       val action = serializer.readValue(request.body, classOf[StrategoAction])
       request.user.currentGameId match {
-        case Some(gameId) if id.equals(gameId) =>
+        case Some(gameId) if id.equals(gameId.toString) =>
           ask(gameManager, InvokeActionRequest(request.user, request.body)).map {
             case InvokeActionSucceeded =>
               JsonResponse.ok
@@ -127,6 +127,7 @@ class GameController extends AbstractController with InitializingBean {
               JsonResponse.bad(reason)
           }
         case _ =>
+          logger.warn(s"${request.user.currentGameId} != $id")
           notAsync(JsonResponse.bad("Not currently in that game"))
       }
 
