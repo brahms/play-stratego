@@ -75,7 +75,7 @@ class StrategoActionTest extends FunSuite with BeforeAndAfter {
     assertResult(placePieceAction.user)(actualPlaceAction.user)
     assertResult(placePieceAction.x)(actualPlaceAction.x)
     assertResult(placePieceAction.y)(actualPlaceAction.y)
-    assertResult(UNKNOWN_13)(actualPlaceAction.mask(blueUser).piece.value)
+    assertResult(UNKNOWN_13)(actualPlaceAction.mask(blueUser).asInstanceOf[PlacePieceAction].piece.value)
 
     val expectedSize = game.getBlueSideboardFor(piece.value).size-1
     actualPlaceAction.invoke(game)

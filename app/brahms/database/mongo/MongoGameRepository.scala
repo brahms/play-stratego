@@ -24,7 +24,9 @@ class MongoGameRepository @Inject()(jongo: Jongo) extends AbstractMongoRepositor
   }
 
   override def deleteAll(): Unit = {
+    logger.debug("deleteAll")
     games.remove()
+    assert(games.count()==0)
   }
 
   override def delete(entities: Iterable[_ <: Game]): Unit = {
@@ -48,7 +50,7 @@ class MongoGameRepository @Inject()(jongo: Jongo) extends AbstractMongoRepositor
   override def save[S <: Game](entity: S): S = {
     logger.debug("Saving game")
     games.save(entity)
-    logger.debug("Game saved: {}", entity.getId)
+    logger.debug("Game saved: {}", entity)
     entity
   }
 
@@ -62,4 +64,33 @@ class MongoGameRepository @Inject()(jongo: Jongo) extends AbstractMongoRepositor
   override def findPending: Seq[Game] = {
     games.find("{state: #}", GameState.PENDING.toString).as(classOf[Game]).asScala.toSeq
   }
+
+  override def findOnePending(id: ObjectId): Option[Game] = {
+    findOne(id) match {
+      case Some(game) if (game.state == GameState.PENDING) =>
+        Some(game)
+      case _ => None
+    }
+  }
+
+  override def findOneRunning(id: ObjectId): Option[Game] = {
+    findOne(id) match {
+      case Some(game) if (game.state == GameState.RUNNING) =>
+        Some(game)
+      case _ => None
+    }
+  }
+
+  override def findRunning: Seq[Game] = {
+    logger.debug("findRunning")
+    val seq = games.find("{state: #}", GameState.RUNNING.toString).as(classOf[Game]).asScala.toSeq
+    logger.debug("Found: {}", seq)
+    seq
+  }
+
+  override def save[S <: Game](entities: Iterable[S]): Unit = {
+    logger.debug("saving {} games", entities.size)
+    entities.foreach(games.save(_))
+  }
+
 }

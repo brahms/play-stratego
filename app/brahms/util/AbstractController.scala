@@ -17,11 +17,8 @@ import play.api.mvc.SimpleResult
 import brahms.serializer.{JsonViews, Serializer}
 
 import scala.concurrent.Future
-object AbstractController {
-  val context: ExecutionContext = ExecutionContext.fromExecutor(Executors.newFixedThreadPool(50))
-}
 
-class AbstractController extends Controller with WithLogging {
+class AbstractController extends Controller with WithLogging with Async{
 
   val serializer = Serializer.serializer;
   val PRIVATE = JsonViews.PRIVATE
@@ -30,16 +27,6 @@ class AbstractController extends Controller with WithLogging {
   var authService: AuthenticationService = _
   @Inject
   var sessionService: SessionService = _
-
-  def async[A] (block: SimpleResult)(implicit request: Request[A])  : Future[SimpleResult]= {
-    Future{
-      block
-    }(AbstractController.context)
-  }
-
-  def notAsync[A] (block: SimpleResult)(implicit request: Request[A]) : Future[SimpleResult] = {
-    Future.successful(block)
-  }
 
   object Authenticated extends ActionBuilder[AuthenticatedRequest] {
     def invokeBlock[A](request: Request[A], block: (AuthenticatedRequest[A]) => Future[SimpleResult]): Future[SimpleResult] = {

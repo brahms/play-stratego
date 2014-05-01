@@ -4,12 +4,13 @@ import org.scalatest.FunSuite
 import brahms.model.stratego.StrategoTypes._
 import brahms.model.{GameState, User}
 import brahms.serializer.{JsonViews, Serializer}
-import brahms.model.stratego.StrategoActions.MoveAction
+import brahms.model.stratego.StrategoActions.{CommitAction, PlacePieceAction, MoveAction}
 import org.bson.types.ObjectId
 
 
 class StrategoGameTest extends FunSuite {
 
+  val serializer = Serializer.serializer.writerWithView(JsonViews.PUBLIC)
   test("Create a stratego game") {
     val board = new StrategoGame
     val red = new User
@@ -66,6 +67,43 @@ class StrategoGameTest extends FunSuite {
     game.setBluePlayer(bluePlayer)
     game.init
     println (Serializer.serializer.writerWithView(JsonViews.PUBLIC).writeValueAsString(game.mask(redPlayer)))
+  }
+
+  test("Test show serialization game") {
+    val game = new StrategoGame
+    val red = new User
+    val blue = new User
+    red.setUsername("RedPlayer")
+    blue.setUsername("BluePlayer")
+    red.setId(new ObjectId())
+    blue.setId(new ObjectId())
+    game.setRedPlayer(red)
+    game.setBluePlayer(blue)
+    game.init
+    var value = 1
+    (1 to 10).foreach {
+      x =>
+        (1 to 4).foreach {
+          y =>
+            if (!game.stillInSideboard(new RedPiece(value))) value += 1
+            val bluePiece = new BluePiece(value)
+            val redPiece = new RedPiece(value)
+
+            var action = PlacePieceAction(red, x, y, redPiece)
+            assert(action.isLegal(game))
+            action.invoke(game)
+            action = PlacePieceAction(blue, x, 11-y, bluePiece)
+            assert(action.isLegal(game))
+            action.invoke(game)
+
+        }
+    }
+    CommitAction(red).invoke(game)
+    CommitAction(blue).invoke(game)
+    MoveAction(red, 1, 4, 1, 5).invoke(game)
+    println(serializer.writeValueAsString(game.mask(red)))
+
+
   }
 
 

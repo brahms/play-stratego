@@ -27,13 +27,13 @@ angular.module('app.stratego.controller', ['app.stratego.actions', 'app.stratego
                     defer.reject()
             defer.promise
 
-        _onData: =>
-
+        _onData: (action) =>
+            
         _onInit: (game) =>
             if (game.state == 'PENDING')
                 log.debug("Game still in pending state")
             else if (game.state == 'RUNNING')
-                @invoker.setPhase('running')
+                @invoker.startGrabbingActions()
                 log.debug("Initializing from #{angular.toJson(game)}")
                 @board.setRunning()
                 actions = (StrategoAction.fromJson(jsonAction) for jsonAction in  game.actionList)

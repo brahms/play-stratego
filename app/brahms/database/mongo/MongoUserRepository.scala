@@ -15,7 +15,7 @@ class MongoUserRepository @Inject() (jongo: Jongo) extends AbstractMongoReposito
   val users = jongo.getCollection(USERS)
 
   override def findByUsername(username: String): Option[User] = {
-
+    logger.debug("Finding: {}", username)
     Option(users.findOne("{username:#}", username).as(classOf[User]))
   }
 
@@ -25,15 +25,20 @@ class MongoUserRepository @Inject() (jongo: Jongo) extends AbstractMongoReposito
   }
 
   override def save[S <: User](entites: Iterable[S]): Seq[S] = {
+    logger.trace("Save multiple")
     entites.map {
       e =>
+        logger.debug("Saving: {}", e)
         users.save(e)
+        logger.debug("Saved: {}", e)
         e
     }.toSeq
   }
 
   override def deleteAll(): Unit = {
+    logger.trace("deleteAll")
     users.remove()
+    assert(users.count() == 0)
   }
 
   override def delete(entities: Iterable[_ <: User]): Unit = {

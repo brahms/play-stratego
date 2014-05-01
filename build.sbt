@@ -22,12 +22,13 @@ libraryDependencies ++= Seq(
 
 libraryDependencies ++= Seq(
   "org.scalatest" %% "scalatest" % "2.1.3" % "test",
-  "org.springframework" % "spring-test" % "4.0.3.RELEASE" % "test"
+  "org.springframework" % "spring-test" % "4.0.3.RELEASE" % "test",
+  "oråg.mockito" % "mockito-all" % "1.9.5" % "test"
 )
 
 play.Project.playScalaSettings
 
-scalacOptions ++= Seq("-feature", "-language:postfixOps")
+scalacOptions ++= Seq("-feature", "-language:postfixOps", "-language:existentials")
 
 resolvers += "SpringSource Milestone Repository" at "http://repo.springsource.org/milestone"
 

@@ -12,9 +12,8 @@ angular.module('app.stratego.invoker', [])
             @phase = 'init'
 
             "#{@} constructor"
-        setPhase: (phase) ->
-            log.debug("#{@} setPhase #{phase}")
-            @phase = phase
+        startGrabbingActions: () ->
+            @phase = 'actions'
         invoke: (action) ->
             defer = Q.defer()
             defer.resolve()
@@ -39,8 +38,6 @@ angular.module('app.stratego.invoker', [])
                 url: "/api/games/#{@gameId}"
                 lastActionId: 0
             }).success((data)=>
-                if (data.state == 'PENDING') then 
-                log.debug("#{@} got game initial state, starting interval")
                 @_updateActionId(data)
                 @emit('init', data)
                 $window.setTimeout(@_onInterval, 1 * 1000)
@@ -76,7 +73,7 @@ angular.module('app.stratego.invoker', [])
                 ).finally( () =>
                     $window.setTimeout(@_onInterval, 5 * 1000)
                 )
-            else if @phase == 'running'
+            else if @phase == 'actions'
                 http({
                     url: "/api/games/#{@gameId}/actions"
                     data: {

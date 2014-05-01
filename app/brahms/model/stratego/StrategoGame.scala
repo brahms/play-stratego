@@ -1,6 +1,6 @@
 package brahms.model.stratego
 
-import brahms.model.{User, Game}
+import brahms.model.{GameState, GameAction, User, Game}
 import scala.beans.{BooleanBeanProperty, BeanProperty}
 import scala.collection.mutable
 import brahms.model.stratego.StrategoTypes._
@@ -62,6 +62,9 @@ class StrategoGame extends Game {
   @BeanProperty
   var currentPlayer: User = _
 
+  @BeanProperty
+  var winningPlayer: User = _
+
   /**
    * True when the blue player has sent a commit action
    */
@@ -84,9 +87,10 @@ class StrategoGame extends Game {
   @JsonProperty
   def phase: String = getStrategoState.toString()
 
-  @BeanProperty
   var actionList: mutable.Buffer[StrategoAction] = new mutable.ListBuffer[StrategoAction]
 
+
+  override def getActionList: Seq[GameAction[StrategoGame]] = actionList
 
   /**
    * Swaps the currentPlayer (basically ending a turn)
@@ -139,16 +143,22 @@ class StrategoGame extends Game {
    * @param x
    * @param y
    */
-  def killPiece(x: Int, y: Int) {
+  def killPiece(x: Int, y: Int) : Boolean = {
     assert(board(x)(y).isInstanceOf[StrategoPiece])
     logger.trace(s"Killing piece: ${board(x)(y)} at $x,$y")
+    var killedFlag = false
     board(x)(y) match {
       case piece: RedPiece =>
+        if (piece.getValue == StrategoTypes.FLAG_12) killedFlag = true
         getRedSideboardFor(piece.value) += piece
       case piece: BluePiece =>
+        if (piece.getValue == StrategoTypes.FLAG_12) killedFlag = true
         getBlueSideboardFor(piece.value) += piece
+      case piece =>
+        throw new IllegalArgumentException("Bad piece to kill: " + piece)
     }
     board(x)(y) = Empty()
+    killedFlag
   }
 
 
@@ -264,7 +274,7 @@ class StrategoGame extends Game {
     currentPlayer = redPlayer
     board = Array.fill[StrategoType](12, 12)(Empty())
     initBoundaries(board)
-
+    setState(GameState.RUNNING)
     blueSideboard = Array.ofDim(12)
     redSideboard = Array.ofDim(12)
     (MINVAL to MAXVAL).foreach {
@@ -275,12 +285,20 @@ class StrategoGame extends Game {
 
 
   }
+  override def toString: String =
+    s"StrategoGame[id: $id, " +
+      s"state: $state, " +
+      s"phase: $phase, " +
+      s"redPlayer: $redPlayer, " +
+      s"bluePlayer: $bluePlayer, " +
+      s"currentPlayer: $currentPlayer" +
+      s"]"
 
   /**
    * Returns a short hand form of the given board state, and the sideboard states
    * @return
    */
-  override def toString: String = {
+  override def stateToString: String = {
     val b = new mutable.StringBuilder
     (11 to 0 by -1).foreach {
       y =>
@@ -305,7 +323,6 @@ class StrategoGame extends Game {
     }
     b.append("\n")
     b.toString()
-
   }
 
   /**
@@ -438,7 +455,7 @@ class StrategoGame extends Game {
     game.setRedPlayer(redPlayer)
     game.setCurrentPlayer(currentPlayer)
     game.setBoard(maskBoard(user))
-    game.setActionList(actionList.map(_.mask(user)))
+    game.actionList = actionList.map(_.mask(user))
     game.setStrategoState(strategoState)
     game.setState(state)
     game

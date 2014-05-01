@@ -1,7 +1,7 @@
 package brahms.model.stratego
 
 import brahms.model.stratego.StrategoTypes._
-import brahms.model.User
+import brahms.model.{GameState, User}
 import brahms.model.stratego.DeathType._
 import scala.beans.BeanProperty
 
@@ -79,8 +79,13 @@ object StrategoActions {
         case ATTACKER_DIES =>
           game.killPiece(x, y)
         case DEFENDER_DIES =>
-          game.killPiece(newX, newY)
+          val killedFlag = game.killPiece(newX, newY)
           game.movePiece(x, y, newX, newY)
+          if(killedFlag) {
+            logger.info(s"$user has won the StrategoGame!")
+            game.state = GameState.FINISHED
+            game.winningPlayer = user
+          }
       }
 
       game.swapPlayer

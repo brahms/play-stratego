@@ -27,11 +27,11 @@ abstract class Game {
   @BeanProperty
   var creator: User = _
 
-  def getActionList: Seq[GameAction]
+  def getActionList: Seq[GameAction[_]]
 
   def mask(user: User) : Game
 
-
+  def stateToString: String
 
 
 }

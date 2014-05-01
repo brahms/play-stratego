@@ -81,11 +81,11 @@ angular.module('app.stratego.board', ['app.stratego.square',
 
         init: ->
             log.debug "Creating board at element: #{@canvas}"
-            @stage = new Kinetic.Stage({
+            @stage = new Kinetic.Stage {
                             container: @canvas
                             height: 600
                             width: 450
-                })
+                    }
 
             @animationsEnabled = false
             @offsetx = 0
@@ -297,7 +297,6 @@ angular.module('app.stratego.board', ['app.stratego.square',
             attackerImage.y(attackY)
             defenderImage.x(defendX)
             defenderImage.y(defendY)
-
 
             anim1Defer = Q.defer()
             anim1 = new Kinetic.Tween {
