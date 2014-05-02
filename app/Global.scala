@@ -1,5 +1,5 @@
 import brahms.database.{GameRepository, UserRepository}
-import brahms.filters.LoggingFilter
+import brahms.filters.{HerokuRequireSSLFilter, StrictTransportSecurityFilter, LoggingFilter}
 import brahms.model.User
 import brahms.util.WithLogging
 import org.springframework.context.annotation.AnnotationConfigApplicationContext
@@ -7,7 +7,7 @@ import play.api.Application
 import play.api.mvc.WithFilters
 import play.filters.csrf.CSRFFilter
 
-object Global extends WithFilters(CSRFFilter(), LoggingFilter) with WithLogging{
+object Global extends WithFilters(HerokuRequireSSLFilter, CSRFFilter(), LoggingFilter, StrictTransportSecurityFilter) with WithLogging{
   val context = new AnnotationConfigApplicationContext()
 
   override def getControllerInstance[A](controllerClass: Class[A]): A = {

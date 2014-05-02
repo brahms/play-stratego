@@ -3,7 +3,6 @@ import play.api.mvc.{SimpleResult, RequestHeader, Filter}
 import play.api.{Logger, Routes}
 import scala.concurrent.Future
 import play.api.libs.concurrent.Execution.Implicits.defaultContext
-import brahms.serializer.Serializer
 
 object LoggingFilter extends Filter {
   def apply(nextFilter: (RequestHeader) => Future[SimpleResult]
