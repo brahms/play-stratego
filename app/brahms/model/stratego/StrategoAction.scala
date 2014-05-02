@@ -14,7 +14,7 @@ import brahms.util.WithLogging
   new Type(value=classOf[StrategoActions.AttackAction], name="AttackAction"),
   new Type(value=classOf[StrategoActions.ReplacePieceAction], name="ReplacePieceAction"),
   new Type(value=classOf[StrategoActions.CommitAction], name="CommitAction")))
-abstract class StrategoAction extends GameAction[StrategoGame] with WithLogging {
+abstract class StrategoAction() extends GameAction[StrategoGame] with WithLogging {
   override def isLegal(game: StrategoGame): Boolean
   override def invoke(game: StrategoGame) : Unit = {
     game.actionList += this

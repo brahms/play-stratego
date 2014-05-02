@@ -121,6 +121,7 @@ class GameManager @Inject() (userRepo: UserRepository, gameRepo: GameRepository)
           runningGames.get(id.toString) match {
             case Some(game : StrategoGame) =>
               val action = Serializer.serializer.readValue(req.actionJson, classOf[StrategoAction])
+
               if (action.isLegal(game)) {
                 logger.debug("Action is legal, invoking: {}", action)
                 action.invoke(game)

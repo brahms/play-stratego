@@ -70,7 +70,7 @@ class User {
 
   @JsonProperty
   def stats = {
-    if (isSimple)  Map (
+    if (!isSimple)  Map (
       "won" -> wonGames.length,
       "lost" -> lostGames.length,
       "drawn" -> drawnGames.length,

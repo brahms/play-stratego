@@ -117,7 +117,6 @@ class GameController extends AbstractController with InitializingBean {
    */
   def invokeAction(id: String) = Authenticated.text {
     implicit request =>
-      val action = serializer.readValue(request.body, classOf[StrategoAction])
       request.user.currentGameId match {
         case Some(gameId) if id.equals(gameId.toString) =>
           ask(gameManager, InvokeActionRequest(request.user, request.body)).map {
@@ -160,7 +159,7 @@ class GameController extends AbstractController with InitializingBean {
     implicit request =>
       request.user.getCurrentGameId match {
         case Some(gameId) =>
-          notAsync(JsonResponse.bad("Already have a current game id: {}", gameId.toString))
+          notAsync(JsonResponse.bad("Already have a current game id: " + gameId.toString))
         case _ =>
           val js = request.body
           (js \ "type").as[String] match {

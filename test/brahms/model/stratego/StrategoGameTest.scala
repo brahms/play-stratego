@@ -63,8 +63,8 @@ class StrategoGameTest extends FunSuite {
     redPlayer.setUsername("cbrahms")
     bluePlayer.setUsername("bla")
     game.setState(GameState.RUNNING)
-    game.setRedPlayer(redPlayer)
-    game.setBluePlayer(bluePlayer)
+    game.setRedPlayer(redPlayer.toSimpleUser)
+    game.setBluePlayer(bluePlayer.toSimpleUser)
     game.init
     println (Serializer.serializer.writerWithView(JsonViews.PUBLIC).writeValueAsString(game.mask(redPlayer)))
   }
