@@ -1,23 +1,20 @@
 package brahms.actors
 
-import brahms.model.{GameState, Game, GameAction, User}
+import brahms.model.{GameState, Game, User}
 import akka.actor.Actor
 import javax.inject.{Inject, Named}
 import org.springframework.context.annotation.Scope
 import brahms.util.{Async, WithLogging}
 import brahms.database.{GameRepository, UserRepository}
 import brahms.model.stratego.{StrategoAction, StrategoGame}
-import org.bson.types.ObjectId
 import brahms.serializer.Serializer
-import org.joda.time.DateTime
 
 case class CreateGame(user: User, gameType: String)
 case class Failed(reason: String)
 case class CreateGameSucceeded(game: Game)
 case class JoinGame(user: User, gameId: String)
 case class JoinGameSucceeded(game: Game)
-case object SaveState
-
+case object CheckTimeout
 case class InvokeActionRequest(user: User, actionJson: String)
 case object InvokeActionSucceeded
 
@@ -98,8 +95,8 @@ class GameManager @Inject() (userRepo: UserRepository, gameRepo: GameRepository)
               runningGames += (game.getId.toString -> game)
               game.setBluePlayer(user.toSimpleUser)
               game.init
-              gameRepo.save(game)
               game.players = game.players :+ user
+              gameRepo.save(game)
               user.setCurrentGameId(Some(game.getId))
               userRepo.save(user)
               sender ! JoinGameSucceeded(game)
@@ -126,6 +123,8 @@ class GameManager @Inject() (userRepo: UserRepository, gameRepo: GameRepository)
                 logger.debug("Action is legal, invoking: {}", action)
                 action.invoke(game)
                 logger.debug("Invoked {}", action)
+                logger.debug("Saving invoked game: {}", game.id)
+                gameRepo.save(game)
                 sender ! InvokeActionSucceeded
               }
               else {
@@ -141,36 +140,35 @@ class GameManager @Inject() (userRepo: UserRepository, gameRepo: GameRepository)
           logger.warn("Failed: User is not currently in a game")
           sender ! Failed("User is not currently in a game")
       }
-    case SaveState =>
-      logger.debug("Checking for timeouts and saving state")
-//      val timeoutCheck = System.currentTimeMillis()
-//      pendingGames.values.foreach { game =>
-//        game.timeouts.foreach { case (user: User, timeout: Long) =>
-//          if (timeout < timeoutCheck) {
-//            logger.warn(s"$user timed out in game $game")
-//            logger.warn("Game is pending, so canceling it")
-//            pendingGames -= game.id.toString
-//            game.state = GameState.CANCELED
-//            gameRepo.save(game)
-//            user.setCurrentGameId(None)
-//            logger.debug("Setting user to have no game set: {}", user)
-//            userRepo.save(user)
-//          }
-//        }
-//      }
-//      runningGames.values.foreach {  game =>
-//          game.timeouts.foreach {  case (user: User, timeout: Long) =>
-//              if (timeout < timeoutCheck) {
-//                runningGames -= game.id.toString
-//                logger.warn(s"$user timed out in game $game")
-//                game.handleTimeout(user)
-//                assert(game.isGameOver)
-//                gameRepo.save(game)
-//              }
-//          }
-//      }
-      gameRepo.save(runningGames.values)
-      logger.debug("Saved")
+    case CheckTimeout =>
+      logger.debug("Checking for timeouts")
+      val timeoutCheck = System.currentTimeMillis()
+      pendingGames.values.foreach { game =>
+        game.timeouts.foreach { case (user: User, timeout: Long) =>
+          if (timeout < timeoutCheck) {
+            logger.warn(s"$user timed out in game $game")
+            logger.warn("Game is pending, so canceling it")
+            pendingGames -= game.id.toString
+            game.state = GameState.CANCELED
+            gameRepo.save(game)
+            user.setCurrentGameId(None)
+            logger.debug("Setting user to have no game set: {}", user)
+            userRepo.save(user)
+          }
+        }
+      }
+      runningGames.values.foreach {  game =>
+          game.timeouts.foreach {  case (user: User, timeout: Long) =>
+              if (timeout < timeoutCheck) {
+                runningGames -= game.id.toString
+                logger.warn(s"$user timed out in game $game")
+                game.handleTimeout(user)
+                assert(game.isGameOver)
+                gameRepo.save(game)
+              }
+          }
+      }
+      logger.debug("Done checking for timeouts")
     case msg =>
       logger.warn("Failed: Unknown msg received: {}", msg)
       sender ! Failed("Unknown")
