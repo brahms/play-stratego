@@ -2,12 +2,12 @@ import brahms.database.{GameRepository, UserRepository}
 import brahms.filters.LoggingFilter
 import brahms.model.User
 import brahms.util.WithLogging
-import org.bson.types.ObjectId
 import org.springframework.context.annotation.AnnotationConfigApplicationContext
-import play.api.{Application, GlobalSettings}
+import play.api.Application
 import play.api.mvc.WithFilters
+import play.filters.csrf.CSRFFilter
 
-object Global extends WithFilters(LoggingFilter) with WithLogging{
+object Global extends WithFilters(CSRFFilter(), LoggingFilter) with WithLogging{
   val context = new AnnotationConfigApplicationContext()
 
   override def getControllerInstance[A](controllerClass: Class[A]): A = {

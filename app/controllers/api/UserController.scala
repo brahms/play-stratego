@@ -5,9 +5,7 @@ import javax.inject.{Singleton, Named, Inject}
 import brahms.response.JsonResponse
 import brahms.requests.AuthenticatedRequest
 import play.api.mvc.{AnyContent, Action}
-import play.api.mvc.BodyParsers._
 import brahms.database.UserRepository
-import brahms.model.User
 
 @Named
 @Singleton
@@ -41,4 +39,5 @@ class UserController extends AbstractController {
       logger.debug("self: {}", request.user.toJson)
       JsonResponse.priv(request.user)
   }
+
 }

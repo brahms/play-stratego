@@ -17,7 +17,7 @@ POST     /api/logout                @controllers.api.AuthController.logout
 POST     /api/signup                @controllers.api.AuthController.signup
 
 # Users
-GET     /api/self                  @controllers.api.UserController.self
+GET     /api/self                   @controllers.api.UserController.self
 GET     /api/users                  @controllers.api.UserController.users
 POST    /api/validate/username      @controllers.api.UserController.isUsernameUnique
 

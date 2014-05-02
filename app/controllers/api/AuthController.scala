@@ -1,8 +1,7 @@
 package controllers.api
 
 import javax.inject.{Inject, Singleton, Named}
-import play.api.mvc.{SimpleResult, Request, Action}
-import play.api.mvc.BodyParsers._
+import play.api.mvc.{Request, Action}
 import brahms.util.AbstractController
 import brahms.response.JsonResponse
 import brahms.requests.AuthenticatedRequest
@@ -11,7 +10,6 @@ import brahms.model.User
 import org.springframework.validation.{ValidationUtils, Errors, Validator}
 import brahms.database.UserRepository
 import scala.beans.BeanProperty
-import scala.concurrent.Future
 
 @Named
 @Singleton
@@ -87,7 +85,7 @@ class AuthController extends AbstractController {
                 val session = sessionService.startSession(user, request)
                 logger.debug("Creating new session: " + session.token)
 
-                JsonResponse.priv(user).withSession(sessionService.SESSION_TOKEN -> session.token)
+                JsonResponse.ok(user).withSession(sessionService.SESSION_TOKEN -> session.token)
 
               case Left(validationError) =>
                 validationError
