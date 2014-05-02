@@ -52,7 +52,7 @@ class User {
   var currentGameId: Option[ObjectId] = None
 
   @BooleanBeanProperty
-  @JsonView(Array(cUslassOf[JsonViews.ServerOnly]))
+  @JsonView(Array(classOf[JsonViews.ServerOnly]))
   var simple: Boolean = false;
 
   @BeanProperty
