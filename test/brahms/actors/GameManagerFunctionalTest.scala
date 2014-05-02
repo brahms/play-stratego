@@ -161,12 +161,6 @@ class GameManagerFunctionalTest extends Specification with WithLogging {
 
       result1 and result2 and result3
     }
-    "Should be able to periodically save the db" in {
-      gameManager ! SaveState
-
-      Thread.sleep(1000)
-      gameRepo.findRunning.size should beEqualTo(1)
-    }
     "Shut down the ctx" in {
       ctx.close()
       ok

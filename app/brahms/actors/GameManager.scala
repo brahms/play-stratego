@@ -144,13 +144,14 @@ class GameManager @Inject() (userRepo: UserRepository, gameRepo: GameRepository)
       logger.debug("Checking for timeouts")
       val timeoutCheck = System.currentTimeMillis()
       pendingGames.values.foreach { game =>
-        game.timeouts.foreach { case (user: User, timeout: Long) =>
+        game.timeouts.foreach { case (username: String, timeout: Long) =>
           if (timeout < timeoutCheck) {
-            logger.warn(s"$user timed out in game $game")
+            logger.warn(s"$username timed out in game $game")
             logger.warn("Game is pending, so canceling it")
             pendingGames -= game.id.toString
             game.state = GameState.CANCELED
             gameRepo.save(game)
+            val user = userRepo.findByUsername(username).get
             user.setCurrentGameId(None)
             logger.debug("Setting user to have no game set: {}", user)
             userRepo.save(user)
@@ -158,13 +159,16 @@ class GameManager @Inject() (userRepo: UserRepository, gameRepo: GameRepository)
         }
       }
       runningGames.values.foreach {  game =>
-          game.timeouts.foreach {  case (user: User, timeout: Long) =>
+          game.timeouts.foreach {  case (username: String, timeout: Long) =>
               if (timeout < timeoutCheck) {
                 runningGames -= game.id.toString
+                val user = userRepo.findByUsername(username).get
                 logger.warn(s"$user timed out in game $game")
                 game.handleTimeout(user)
                 assert(game.isGameOver)
                 gameRepo.save(game)
+                val stats = game.gameStats
+                userRepo.updateUserStats(stats)
               }
           }
       }
