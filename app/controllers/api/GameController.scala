@@ -101,7 +101,7 @@ class GameController extends AbstractController with InitializingBean {
         gameRepo.findOne(new ObjectId(id)) match {
           case Some(game) if game.state == GameState.FINISHED || request.user.isAdmin =>
             JsonResponse.ok(game.getActionList.filter(_.actionId > lastActionId))
-          case Some(game) if id.equals(request.user.currentGameId.orNull) =>
+          case Some(game) if id.equals(request.user.currentGameId.map(_.toString).orNull) =>
             JsonResponse.ok(game.mask(request.user).getActionList.filter(_.actionId > lastActionId))
           case _ =>
             JsonResponse.notFound
