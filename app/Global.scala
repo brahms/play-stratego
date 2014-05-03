@@ -25,16 +25,16 @@ object Global extends WithFilters(HerokuRequireSSLFilter, CSRFFilter(), LoggingF
     val repo = context.getBean(classOf[UserRepository])
     logger.debug("Searching for initial cbrahms user")
 
-    repo.deleteAll()
-    val user = new User
-    user.setAdmin(true)
-    user.setPassword(User.encryptPassword("OneOne11"))
-    user.setUsername("cbrahms")
-    repo.save(user)
-
-    val gameRepo = context.getBean(classOf[GameRepository])
-    logger.debug("Deleting all games")
-    gameRepo.deleteAll()
+//    repo.deleteAll()
+//    val user = new User
+//    user.setAdmin(true)
+//    user.setPassword(User.encryptPassword("OneOne11"))
+//    user.setUsername("cbrahms")
+//    repo.save(user)
+//
+//    val gameRepo = context.getBean(classOf[GameRepository])
+//    logger.debug("Deleting all games")
+//    gameRepo.deleteAll()
 
   }
 

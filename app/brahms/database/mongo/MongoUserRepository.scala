@@ -14,6 +14,11 @@ class MongoUserRepository @Inject() (jongo: Jongo) extends AbstractMongoReposito
   val USERS = "users"
   val users = jongo.getCollection(USERS)
 
+
+  override def get(user: User): User = {
+    findByUsername(user.username).get
+  }
+
   override def findByUsername(username: String): Option[User] = {
     logger.debug("Finding: {}", username)
     Option(users.findOne("{username:#}", username).as(classOf[User]))
@@ -49,12 +54,12 @@ class MongoUserRepository @Inject() (jongo: Jongo) extends AbstractMongoReposito
   }
 
   override def delete(entity: User): Unit = {
-    delete(entity.id)
+    delete(entity.username)
   }
 
-  override def delete(id: ObjectId): Unit = {
-    logger.debug("Deleting user: {}", id)
-    users.remove(id)
+  override def delete(username: String): Unit = {
+    logger.debug("Deleting user: {}", username)
+    users.remove("{username:#}", username)
   }
 
   override def count(): Long = {
@@ -65,13 +70,8 @@ class MongoUserRepository @Inject() (jongo: Jongo) extends AbstractMongoReposito
     users.find().as(classOf[User]).asScala.toSeq
   }
 
-  override def exists(id: ObjectId): Boolean = {
-    users.count("{_id: #}", id) == 1
-  }
-
-  override def findOne(id: ObjectId): Option[User] = {
-    logger.debug("fineOne: {}", id)
-    Option(users.findOne(id).as(classOf[User]))
+  override def exists(username: String): Boolean = {
+    users.count("{username: #}", username) == 1
   }
 
   override def save[S <: User](entity: S): S = {

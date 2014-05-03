@@ -35,7 +35,7 @@ angular.module('app.stratego.actions', ['app.stratego.pieces'])
             if board.isOutOfBounds(@newX, @newY) then return false
             piece = board.getPiece(@x, @y)
             maxDist = 1
-            if (piece.value = StrategoPiece.SCOUT) then maxDist = 10
+            if (piece.value is StrategoPiece.SCOUT) then maxDist = 10
             if (board.getDistance(@x, @y, @newX, @newY) > maxDist) then return false
             if (board.isThroughLakes(@x, @y, @newX, @newY)) then return false
         apply: (board) ->

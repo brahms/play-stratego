@@ -9,7 +9,6 @@ object StrictTransportSecurityFilter extends Filter {
     f(rh).map {
       result =>
         result.withHeaders( "Strict-Transport-Security" -> "max-age=31536000")
-
     }
   }
 }

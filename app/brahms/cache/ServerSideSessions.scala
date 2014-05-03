@@ -20,9 +20,8 @@ object ServerSideSessions {
 
     Cache.getAs[String](token).map {
       json =>
-      //  println(s"XXX get server session $token = $json")
         val state = Serializer.serializer.readValue(json, classOf[ServerSideSessionState])
-      //  println(s"XXX get server session $token = $state")
+        Cache.set(token, json, (24 hours))
         state
     }
   }

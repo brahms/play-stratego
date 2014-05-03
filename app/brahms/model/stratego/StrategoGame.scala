@@ -464,6 +464,7 @@ class StrategoGame extends Game {
     game.actionList = actionList.map(_.mask(user))
     game.setStrategoState(strategoState)
     game.setState(state)
+    game.setId(id)
     game
   }
 

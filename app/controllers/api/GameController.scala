@@ -76,10 +76,11 @@ class GameController extends AbstractController with InitializingBean {
   def getGameState(id: String) = Authenticated.async {
     implicit request =>
       async {
+        logger.debug("Attempting to find game id {}", id)
         gameRepo.findOne(new ObjectId(id)) match {
           case Some(game) if game.state == GameState.FINISHED || game.state == GameState.PENDING || request.user.isAdmin =>
             JsonResponse.ok(game)
-          case Some(game) if id.equals(request.user.currentGameId.orNull) =>
+          case Some(game) if id.equals(request.user.currentGameId.map(_.toString).orNull) =>
             JsonResponse.ok(game.mask(request.user))
           case _ =>
             JsonResponse.notFound

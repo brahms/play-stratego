@@ -23,14 +23,14 @@ POST    /api/validate/username      @controllers.api.UserController.isUsernameUn
 
 #Game
 GET     /api/games                  @controllers.api.GameController.getGames
-GET     /api/games/1234             @controllers.api.GameController.getTestGameState()
-GET     /api/games/1234/actions     @controllers.api.GameController.getTestGameActions()
 GET     /api/games/:id              @controllers.api.GameController.getGameState(id)
 GET     /api/games/:id/actions      @controllers.api.GameController.getGameActions(id)
 POST    /api/games/:id/action       @controllers.api.GameController.invokeAction(id)
 POST    /api/games/:id/join         @controllers.api.GameController.join(id)
 POST    /api/games/create           @controllers.api.GameController.createGame
 
+GET     /api/games/1234             @controllers.api.GameController.getTestGameState()
+GET     /api/games/1234/actions     @controllers.api.GameController.getTestGameActions()
 
 
 #Test

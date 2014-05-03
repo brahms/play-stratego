@@ -86,7 +86,7 @@ class GameManager @Inject() (userRepo: UserRepository, gameRepo: GameRepository)
         sender ! Failed("Game is not joinable: " + req.gameId)
       }
       else {
-        val user = userRepo.findOne(req.user.getId).get
+        val user = userRepo.findByUsername(req.user.username).get
         if(user.getCurrentGameId.isEmpty) {
           pendingGames.get(req.gameId) match {
             case Some(game: StrategoGame) if game.state == GameState.PENDING =>

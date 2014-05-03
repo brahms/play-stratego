@@ -23,13 +23,11 @@ class SessionService {
 
   import play.api.Play.current // impliciit app
 
-  def startSession[A](user: User, request: Request[A]): AuthenticatedRequest[A] = {
+  def startSession(user: User): String = {
     val state = new ServerSideSessionState()
     state.user = Some(user)
     val token = ServerSideSessions.create(state, SESSION_EXPIRY)
-    request.session + (SESSION_TOKEN, token)
-    //println(s"XXX startSession token $token")
-    AuthenticatedRequest[A](user, token, request)
+    token
   }
 
   /**
@@ -45,7 +43,7 @@ class SessionService {
       token <- request.session.get(SESSION_TOKEN).toRight(new NoSessionError).right
       session <- ServerSideSessions.get(token).toRight(new ExpiredSessionError).right
       user <- session.user.toRight(new ExpiredSessionError).right
-    } yield AuthenticatedRequest(userRepo.findOne(user.id).get, token, request)
+    } yield AuthenticatedRequest(userRepo.get(user), token, request)
 
   }
 
