@@ -36,7 +36,6 @@ GET     /api/games/1234/actions     @controllers.api.GameController.getTestGameA
 GET /api/debug/games/:id             @controllers.api.DebugController.getGame(id)
 GET /api/debug/games                @controllers.api.DebugController.getGames()
 
-
 #Test
 GET     /test                       controllers.TestController.test
 GET     /test2                      controllers.TestController.test2

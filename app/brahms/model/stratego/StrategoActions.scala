@@ -258,12 +258,16 @@ object StrategoActions {
      */
     override def isLegal(game: StrategoGame): Boolean = {
       if (game.strategoState != StrategoState.PLACE_PIECES) {
+        logger.debug("Failing on clause 1, game phase is: {}", game.strategoState)
         return false
       }
       if (game.bluePlayer.equals(user) && (game.bluePlayerReady || !game.blueSideboard.forall(_.isEmpty))) {
+        logger.debug(s"Failing on clause 2, bluePlayerEqualsUser: ${game.bluePlayer.equals(user)} bluePlayerReady: ${game.bluePlayerReady } !game.blueSideboard.forall(_.isEmpty)): ${!game.blueSideboard.forall(_.isEmpty)}")
         return false
       }
       if (game.redPlayer.equals(user) && (game.redPlayerReady || !game.redSideboard.forall(_.isEmpty))) {
+        logger.debug(s"Failing on clause 3, redPlayerEqualsUser: ${game.redPlayer.equals(user)} redPlayerReady: ${game.redPlayerReady } !game.redSideboard.forall(_.isEmpty)): ${!game.redSideboard.forall(_.isEmpty)}")
+
         return false
       }
       true

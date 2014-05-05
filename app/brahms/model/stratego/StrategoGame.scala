@@ -306,6 +306,13 @@ class StrategoGame extends Game {
    */
   override def stateToString: String = {
     val b = new mutable.StringBuilder
+    b.append(s"Game id: $id")
+    b.append(s"\nGame state: $state")
+    b.append(s"\nGame phase: $phase")
+    b.append(s"\nRed player: $redPlayer")
+    b.append(s"\nBlue player: $bluePlayer")
+    b.append(s"\nPlayers turn: $currentPlayer")
+    b.append("\n\n")
     (11 to 0 by -1).foreach {
       y =>
         (0 to 11).foreach {
@@ -314,7 +321,6 @@ class StrategoGame extends Game {
         }
         b.append("\n")
     }
-
     b.append("\nRed SideBoard: | ")
 
     (MINVAL to MAXVAL).foreach {
