@@ -93,4 +93,7 @@ class MongoGameRepository @Inject()(jongo: Jongo) extends AbstractMongoRepositor
     entities.foreach(games.save(_))
   }
 
+  override def findAll(): Seq[Game] = {
+    games.find().as(classOf[Game]).asScala.toSeq
+  }
 }

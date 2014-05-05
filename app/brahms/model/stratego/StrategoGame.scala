@@ -465,6 +465,7 @@ class StrategoGame extends Game {
     game.setStrategoState(strategoState)
     game.setState(state)
     game.setId(id)
+    game.players = players
     game
   }
 

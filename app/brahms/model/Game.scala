@@ -46,7 +46,10 @@ abstract class Game {
   /**
    * A map of when a users to when they should timeout
    */
+  @BeanProperty
   var timeouts: Map[String, Long] = Map()
+
+  @BeanProperty
   var players: Seq[User] = Seq()
 
   /**

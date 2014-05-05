@@ -32,6 +32,10 @@ POST    /api/games/create           @controllers.api.GameController.createGame
 GET     /api/games/1234             @controllers.api.GameController.getTestGameState()
 GET     /api/games/1234/actions     @controllers.api.GameController.getTestGameActions()
 
+#Admin
+GET /api/debug/games/:id             @controllers.api.DebugController.getGame(id)
+GET /api/debug/games                @controllers.api.DebugController.getGames()
+
 
 #Test
 GET     /test                       controllers.TestController.test

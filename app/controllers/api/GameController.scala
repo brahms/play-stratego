@@ -55,7 +55,7 @@ class GameController extends AbstractController with InitializingBean {
         val res = gameRepo.findPending.map {
           g =>
             Map(
-              "_id" -> g.getId.toString,
+              "id" -> g.getId.toString,
               "creator" -> g.getCreator.toSimpleUser,
               "type" -> g.getType,
               "state" -> g.getState.toString
