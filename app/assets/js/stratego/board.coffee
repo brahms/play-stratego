@@ -157,6 +157,10 @@ angular.module('app.stratego.board', ['app.stratego.square',
         setEmptyAndUpdateSideboard: (x, y) ->
             log.debug("#{@} setEmptyAndUpdateSideboard(#{x} #{y})")
             piece = @matrix[x][y].getPiece()
+            if (piece instanceof StrategoPiece) then piece.kill()
+
+            log.debug("#{@} setEmptyAndUpdateSideboard - #{piece}")
+
             @matrix[x][y].setEmpty()
             
             if (piece.value < 13)
@@ -165,7 +169,7 @@ angular.module('app.stratego.board', ['app.stratego.square',
 
         movePiece: (x, y, newX, newY) ->
             piece = @matrix[x][y].getPiece()
-            log.debug("#{@} movePiece(#{piece} #{x}, #{y} -> #{newX}, #{newY})")
+            log.debug("#{@} movePiece(#{piece}  #{x}, #{y} -> #{newX}, #{newY})")
             @matrix[x][y].setEmpty()
             @matrix[newX][newY].setPiece(piece)
         getPiece: (x, y) ->

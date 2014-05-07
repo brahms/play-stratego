@@ -56,37 +56,42 @@ angular.module('app.stratego.controller', ['app.stratego.actions', 'app.stratego
                     log.debug("Initializing from #{angular.toJson(game)}")
                     @board.setRunning()
                     actions = (StrategoAction.fromJson(jsonAction) for jsonAction in  game.actionList)
-                    promises = []
+                    d = Q.defer()
+                    d.resolve()
+                    promise = d.promise
                     actions.forEach (action) =>
-                        log.debug("#{@} applying action: #{action}")
-                        promises.push(action.apply(@board))
-                    Q.all(promises)
-                        .finally () =>
-                            log.debug("Finished applying actions")
-                            @board.setPhase(game.phase)
-                            switch game.phase
-                                when "PLACE_PIECES" 
-                                    log.debug("Enable sideboard")
-                                    @board.enableSideboard()
-                                else 
-                                    timeout () =>
-                                        @scope.$apply () =>
-                                            log.debug("Setting show commit to false")
-                                            @scope.showCommit = false
-                            @board.enableDragging()
-                            @board.draw()
-                            @invoker.startGrabbingActions()
-                            @_invokeAnyAction()
+                        promise = promise.then(()=>
+                            log.debug("#{@} applying action: #{action}")
+                            action.apply(@board)
+                        )
+                    promise.finally () =>
+                        log.debug("Finished applying actions")
+                        @board.setPhase(game.phase)
+                        switch game.phase
+                            when "PLACE_PIECES" 
+                                log.debug("Enable sideboard")
+                                @board.enableSideboard()
+                            else 
+                                timeout () =>
+                                    @scope.$apply () =>
+                                        log.debug("Setting show commit to false")
+                                        @scope.showCommit = false
+                        @board.enableDragging()
+                        @board.draw()
+                        @invoker.startGrabbingActions()
+                        @_invokeAnyAction()
 
         _invokeAnyAction: () =>
             if @actionQueue.length > 0
                 action = @actionQueue.shift()
                 log.debug("Invoking action on board: #{action}")
                 action.apply(@board).finally () =>
+                    @board.draw()
                     timeout @_invokeAnyAction
 
         _onPieceMoved: (piece, pos) =>
             log.debug("#{@} _onPieceMoved: #{piece}")
+            if !piece.getSquare()? then throw "Error: _onPieceMoved #{piece} has no current square"
             square = @board.getSquareForLayerPoint({
                 layerX: pos.x
                 layerY: pos.y      
@@ -143,6 +148,7 @@ angular.module('app.stratego.controller', ['app.stratego.actions', 'app.stratego
                 timeout( () =>
                     @scope.$apply () => 
                         @scope.currentGameId = null
+                        window.location = "/app"
                 )
             )
 

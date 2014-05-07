@@ -47,7 +47,7 @@ angular.module('app.stratego.pieces', ['app.stratego.functions'])
         getImageKey: => 
             "#{@color}#{@value}"
         toString: =>
-            "StrategoPiece[#{@getImageKey()} #{@image?.x()}/#{@image?.y()}]"
+            "StrategoPiece[#{@getImageKey()}]"
         setSquare: (square) ->
             @square = square
             log.debug("setSquare: #{@square}")
@@ -123,7 +123,6 @@ angular.module('app.stratego.pieces', ['app.stratego.functions'])
     StrategoPiece.UNKNOWN = 13
 
     StrategoPiece.fromJson = (json) ->
-        log.debug("StrategoPiece.fromJson: #{angular.toJson(json)}")
         piece = null
         switch json.type
             when "RedPiece" then piece = new RedPiece(json.value)

@@ -19,20 +19,54 @@ object StrategoActions {
                         newX: Int,
                         newY: Int) extends StrategoAction {
     override def isLegal(game: Game): Boolean = {
+      logger.trace(s"$this checking isLegal")
       game match {
         case game: StrategoGame =>
-          if (outOfBounds(x, y)) return false
-          if (outOfBounds(newX, newY)) return false;
-          if (game.phase != StrategoPhase.RUNNING) return false;
+          if (outOfBounds(x, y)) {
+            logger.debug(s"$this Illegal because outofbounds x,y")
+            return false
+          }
+          if (outOfBounds(newX, newY)) {
+            logger.debug(s"$this Illegal because outofbounds newX,newY")
+            return false
+          }
+          if (game.phase != StrategoPhase.RUNNING) {
+            logger.debug(s"$this Illegal because phase ${game.phase}")
+            return false
+          }
           val moveType = game.board(newX)(newY)
           game.board(x)(y) match {
-            case piece: StrategoPiece if game.sameUser(user, piece) && moveType == Empty() =>
-              if (isDiagonal(x, y, newX, newY)) return false
+            case piece: StrategoPiece  =>
+              if (!game.sameUser(user, piece)) {
+                logger.debug(s"$this Illegal because spoofing other player")
+                return false
+              }
+              if (moveType != Empty()) {
+                logger.debug(s"$this Illegal because move type is not empty type")
+                return false
+
+              }
+              if (isDiagonal(x, y, newX, newY)) {
+                logger.debug(s"$this Illegal because diagonal")
+                return false
+              }
+              if (!game.currentPlayer.equals(user)) {
+                logger.debug(s"$this Illegal because double move by $user")
+                return false;
+              }
               val dist = distance(x, y, newX, newY)
-              if (dist > 1 && piece.value != SCOUT_2) return false
-              if (game.boundaryInPath(x, y, newX, newY)) return false
+              if (dist > 1 && piece.value != SCOUT_2) {
+
+                logger.debug(s"$this Illegal because dist > 1 and piece.value = ${piece.value}")
+                return false
+              }
+              if (game.boundaryInPath(x, y, newX, newY)) {
+                logger.debug(s"$this Illegal because boundaryInPath")
+                return false
+              }
               true
-            case _ =>
+            case typ =>
+              logger.debug(s"$this Illegal because not a stratego piece: $typ")
               false
           }
       }
@@ -100,10 +134,10 @@ object StrategoActions {
       game match {
         case game: StrategoGame =>
 
-
+          if (!game.currentPlayer.equals(user)) return false
           if (outOfBounds(x, y)) return false
           if (outOfBounds(newX, newY)) return false;
-          if (game.phase != StrategoPhase.RUNNING) return false;
+          if (game.phase != StrategoPhase.RUNNING) return false
 
           val defender = game.board(newX)(newY)
           val attacker = game.board(x)(y)

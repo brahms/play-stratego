@@ -57,7 +57,7 @@ angular.module('app.stratego.actions', ['app.stratego.pieces'])
             @newY = json.newY
             @user = json.user
         toString: ->
-            "MoveAction[user: #{@user}, x: #{@x}, y: #{@y} newX: #{@newX}, newY: #{@newY}"
+            "MoveAction[user: #{@user?.username}, x: #{@x}, y: #{@y} newX: #{@newX}, newY: #{@newY}"
 
     class AttackAction extends StrategoAction
         constructor: ({user, x, y, newX, newY, attacker, defender, result}) ->
@@ -100,7 +100,7 @@ angular.module('app.stratego.actions', ['app.stratego.pieces'])
             @defender = StrategoPiece.fromJson(json.defender)
             @result = json.result
         toString: ->
-            "AttackAction[user: #{@user}, \
+            "AttackAction[user: #{@user?.username}, \
             x: #{@x}, \
             y: #{@y} \
             newX: #{@newX}, \
@@ -139,7 +139,7 @@ angular.module('app.stratego.actions', ['app.stratego.pieces'])
             @piece = StrategoPiece.fromJson(json.piece)
             @user = json.user
         toString: ->
-            "PlacePieceAction[user: #{@user}, x:#{@x} y:#{@y} piece:#{@piece}]"
+            "PlacePieceAction[user: #{@user?.username}, x:#{@x} y:#{@y} piece:#{@piece}]"
 
     class ReplacePieceAction extends StrategoAction
         constructor: ({user, x, y, newX, newY}) ->
@@ -156,11 +156,9 @@ angular.module('app.stratego.actions', ['app.stratego.pieces'])
             if !@newX? then throw "ReplacePieceAction newX null"
             if !@newY? then throw "ReplacePieceAction newY null"
             if !@user? then throw "ReplacePieceAction user null"
-            defer = Q.defer()
-            defer.resolve()
+
             board.setEmptyAndUpdateSideboard(@newX, @newY)
             board.movePiece(@x, @y, @newX, @newY)
-            defer.promise
 
         toJson: (json) -> {
             type: 'ReplacePieceAction'
@@ -174,8 +172,9 @@ angular.module('app.stratego.actions', ['app.stratego.pieces'])
             @y = json.y
             @newX = json.newX
             @newY = json.newY
+            @user = json.user
         toString: ->
-            "ReplacePieceAction[user: #{@user}, x:#{@x} y:#{@y} newX: #{@newX}, newY: #{@newY}]"
+            "ReplacePieceAction[user: #{@user?.username}, x:#{@x} y:#{@y} newX: #{@newX}, newY: #{@newY}]"
 
 
     class CommitAction extends StrategoAction
@@ -197,7 +196,7 @@ angular.module('app.stratego.actions', ['app.stratego.pieces'])
             @user = json.user
 
         toString: ->
-            "CommitAction[user: #{@user}]"
+            "CommitAction[user: #{@user?.username}]"
 
     {
         StrategoAction: StrategoAction

@@ -22,20 +22,17 @@ object Global extends WithFilters(HerokuRequireSSLFilter, CSRFFilter(), LoggingF
     context.refresh()
     context.start()
 
-//    val repo = context.getBean(classOf[UserRepository])
-//    logger.debug("Searching for initial cbrahms user")
-//
-//    repo.deleteAll()
-//    val user = new User
-//    user.setAdmin(true)
-//    user.setPassword(User.encryptPassword("OneOne11"))
-//    user.setUsername("cbrahms")
-//    repo.save(user)
-//
-//    val gameRepo = context.getBean(classOf[GameRepository])
-//    logger.debug("Deleting all games")
-//    gameRepo.deleteAll()
-
+    logger.debug("Searching for initial cbrahms user")
+    val repo = context.getBean(classOf[UserRepository])
+    repo.findByUsername("cbrahms") match {
+      case Some(user) =>
+      case _ =>
+        val user = new User
+        user.setAdmin(true)
+        user.setPassword(User.encryptPassword("OneOne11"))
+        user.setUsername("cbrahms")
+        repo.save(user)
+    }
   }
 
   override def onStop(app: Application): Unit = {

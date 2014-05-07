@@ -14,6 +14,7 @@ angular.module('app.stratego.invoker', [])
             "#{@} constructor"
         startGrabbingActions: () ->
             @invokerPhase = 'actions'
+            @_onInterval()
         invoke: (action) ->
             defer = Q.defer()
             defer.resolve()
@@ -32,32 +33,18 @@ angular.module('app.stratego.invoker', [])
                 defer.reject()
             )
             defer.promise
-        start: ->
-            defer = Q.defer()
-            http({
-                url: "/api/games/#{@gameId}"
-            }).success((data)=>
-                @_updateActionId(data.actionList)
-                @emit('init', data)
-                $window.setTimeout(@_onInterval, 1 * 1000)
-                defer.resolve()
-            ).error(()=>
-                log.debug("#{@} unable to get game state")
-                defer.reject()
-            )
-            defer.promise.then () =>
-                "#{@} done loading"
+        start: -> @_onInterval()
         stop: ->
             @_onInterval = () ->
 
         _updateActionId: (data) ->
-            log.debug("#{@} updateActionId to : #{data.actionId}")
 
             if data.length > 0
                 @lastActionId = data[data.length-1].actionId
 
-            log.debug("#{@} Updated to : #{@lastActionId}")
+            log.debug("#{@} Updated action id to : #{@lastActionId}")
         _onInterval: =>
+            defer = Q.defer()
             if @invokerPhase == 'init'
                 http({
                     url: "/api/games/#{@gameId}"
@@ -65,17 +52,18 @@ angular.module('app.stratego.invoker', [])
                         lastActionId : @lastActionId
                     }
                 }).success( (game) =>
-                    log.debug("#{@} Got more game state")
+                    log.debug("#{@} Got game state")
                     if (game.state == "PENDING") 
                         log.debug("INVOKER - Game still in pending state")
-                        return
+                        $window.setTimeout(@_onInterval, 5 * 1000)
                     else 
+                        @invokerPhase = 'actions'
                         log.debug("INVOKER - game is in #{game.state} state")
-                    @emit('init', game)
+                        @emit('init', game)
+                    defer.resolve()
                 ).error( () =>
                     log.error("#{@} Error getting game in onInterval")
-                ).finally( () =>
-                    $window.setTimeout(@_onInterval, 5 * 1000)
+                    defer.reject()
                 )
             else if @invokerPhase == 'actions'
                 http({
@@ -88,11 +76,16 @@ angular.module('app.stratego.invoker', [])
                         log.debug("#{@} Got more game state")
                         @_updateActionId(data)
                         @emit('data', data)
+                    defer.resolve()
+
                 ).error( () =>
                     log.error("#{@} Error getting data in onInterval")
+                    defer.reject()
                 ).finally( () =>
-                    $window.setTimeout(@_onInterval, 2 * 1000)
+                    $window.setTimeout(@_onInterval, 1 * 1000)
                 )
+            defer.promise.then () =>
+                "#{@} done loading"
 
         toString: ->
             "StrategoInvoker[gameId: #{@gameId} user: #{@user.username}]"

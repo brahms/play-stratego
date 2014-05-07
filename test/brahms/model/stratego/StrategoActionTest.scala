@@ -256,4 +256,23 @@ class StrategoActionTest extends FunSuite with BeforeAndAfter {
     assert(!action.isLegal(game))
   }
 
+  test ("Cheating move action") {
+
+    game.phase = StrategoPhase.RUNNING
+    game.setPiece(1, 1, new RedPiece(MAJOR_7))
+    game.setPiece(8, 1, new BluePiece(MAJOR_7))
+
+
+    var action = MoveAction(1, 1, 1, 2).withUser(redUser)
+    assert(action.isLegal(game))
+    action.invoke(game)
+    assert(!action.isLegal(game))
+    action = MoveAction(8, 1, 8, 2).withUser(blueUser)
+    assert(action.isLegal(game))
+    action.invoke(game)
+    assert(!action.isLegal(game))
+
+
+  }
+
 }
