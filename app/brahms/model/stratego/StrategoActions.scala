@@ -107,9 +107,9 @@ object StrategoActions {
           attacker = game.board(x)(y).asInstanceOf[StrategoPiece]
 
           defender = game.board(newX)(newY).asInstanceOf[StrategoPiece]
-          val resultEnum = defender.ifAttackedBy(attacker)
+          result = defender.ifAttackedBy(attacker)
           logger.trace(s"$user has $attacker attacking $defender and $result")
-          resultEnum match {
+          result match {
             case BOTH_DIE =>
               game.killPiece(x, y)
               game.killPiece(newX, newY)

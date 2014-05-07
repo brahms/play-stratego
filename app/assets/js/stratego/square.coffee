@@ -27,10 +27,11 @@ angular.module('app.stratego.square', ['app.stratego.functions', 'app.stratego.p
                 strokeWidth: 5
             }
             @piece = null
+            @draggable = false
 
             layer.add @rect
         toString: =>
-            "StrategoSquare[#{@x}/#{@y}, Piece: #{@getPiece()}]";
+            "StrategoSquare[#{@x}/#{@y}, Piece: #{@getPiece()}, Draggable: #{@draggable} }]";
         getPiece: =>
             if (@piece)
                 @piece
@@ -48,8 +49,10 @@ angular.module('app.stratego.square', ['app.stratego.functions', 'app.stratego.p
                 y: @layerY
                 emitter: @emitter
             }
-            promise.then () =>
-                if @draggable then @piece.draggableOn() else @piece.draggableOff()
+            promise
+                .then ()=>
+                    log.debug("#{@} setting #{piece} to draggable: #{@draggable}")
+                    if @draggable then @piece.draggableOn() else @piece.draggableOff()
 
         hasRedPiece: ->
             if @piece and @piece instanceof RedPiece
