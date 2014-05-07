@@ -10,8 +10,8 @@ angular.module('app', [
     'app.directives'
     'app.controllers'
     'app.stratego'
-]).config([ '$routeProvider', '$locationProvider',   
-    ($routeProvider, $locationProvider) ->
+]).config([ '$routeProvider', '$locationProvider', '$httpProvider',  
+    ($routeProvider, $locationProvider, $httpProvider) ->
         $routeProvider.when('/app', {templateUrl: "#{ASSETS}partials/play.html", controller: 'PlayCtrl'});
         if (!USER)    
             $routeProvider.when('/app/signup', {templateUrl: "#{ASSETS}partials/signup.html", controller: 'SignupCtrl'})
@@ -25,5 +25,7 @@ angular.module('app', [
         $routeProvider.otherwise({redirectTo: '/app'});
 
         $locationProvider.html5Mode(true);
+
+        $httpProvider.defaults.headers.post["Csrf-Token"] = "nocheck"
 
 ])

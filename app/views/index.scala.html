@@ -34,14 +34,14 @@
 
         <div style="clear:both"/>
     <br>
-<!--    <pre>$location.path() = {{$location.path()}}</pre>
+<!--    <pre>$location.path() = {{$location.path()}}</pre> -->
     <pre>$route.current.templateUrl = {{$route.current.templateUrl}}</pre>
     <pre>$route.current.params = {{$route.current.params}}</pre>
     <pre>$route.current.scope.ctrl = {{$route.current.scope.ctrl}}</pre>
-    <pre>$routeParams = {{$routeParams}}</pre> -->
+    <pre>$routeParams = {{$routeParams}}</pre>
         <pre>user.username = {{user.username}}</pre>
         <pre>user.currentGameId = {{user.currentGameId}}</pre>
-        <pre>user._id = {{user._id}}</pre>
+        <pre>user.id = {{user.id}}</pre>
     </div>
     <div class="footer">
         <p>© Chris Brahms 2014</p>
@@ -54,7 +54,9 @@
     <!-- Placed at the end of the document so the pages load faster -->
 
     <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js"></script>
+    <!-- <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js"></script> -->
+    <script src="@routes.Assets.at("js/lib/jquery-1.9.1.min.js")"></script>
+
     <!-- Include all compiled plugins (below), or include individual files as needed -->
     <script src="@routes.Assets.at("js/lib/bootstrap.min.js")"></script>
     <script src="@routes.Assets.at("js/lib/angular/angular.js")"></script>

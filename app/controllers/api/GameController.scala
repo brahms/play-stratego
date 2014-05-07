@@ -2,15 +2,11 @@ package controllers.api
 
 import brahms.util.AbstractController
 import brahms.response.JsonResponse
-import brahms.model.stratego.{StrategoTypes, StrategoGame, StrategoAction}
 import javax.inject.{Named, Singleton, Inject}
 import brahms.database.{UserRepository, GameRepository}
 import scala.beans.BeanProperty
-import org.bson.types.ObjectId
-import brahms.model.{User, Game, GameState}
-import play.api.mvc.Action
-import brahms.model.stratego.StrategoActions.PlacePieceAction
-import brahms.model.stratego.StrategoTypes.{BluePiece, RedPiece}
+import brahms.model.GameState
+import brahms.model.stratego.StrategoTypes.RedPiece
 import org.springframework.beans.factory.InitializingBean
 import akka.actor.ActorRef
 import brahms.actors._
@@ -18,6 +14,7 @@ import akka.util.Timeout
 import akka.pattern.ask
 import scala.concurrent.duration._
 import play.api.libs.concurrent.Execution.Implicits._
+import brahms.model.stratego.{StrategoGame, StrategoAction}
 
 
 @Singleton
@@ -52,16 +49,7 @@ class GameController extends AbstractController with InitializingBean {
   def getGames = Authenticated.async {
     implicit request =>
       async {
-        val res = gameRepo.findPending.map {
-          g =>
-            Map(
-              "id" -> g.getId.toString,
-              "creator" -> g.getCreator.toSimpleUser,
-              "type" -> g.getType,
-              "state" -> g.getState.toString
-            )
-        }
-        JsonResponse.ok(res)
+        JsonResponse.ok(gameRepo.findPending)
       }
   }
 
@@ -77,7 +65,7 @@ class GameController extends AbstractController with InitializingBean {
     implicit request =>
       async {
         logger.debug("Attempting to find game id {}", id)
-        gameRepo.findOne(new ObjectId(id)) match {
+        gameRepo.findOne(id) match {
           case Some(game) if game.state == GameState.FINISHED || game.state == GameState.PENDING || request.user.isAdmin =>
             JsonResponse.ok(game)
           case Some(game) if id.equals(request.user.currentGameId.map(_.toString).orNull) =>
@@ -97,12 +85,14 @@ class GameController extends AbstractController with InitializingBean {
   def getGameActions(id: String) = Authenticated.async {
     implicit request =>
       val lastActionId = request.getQueryString("lastActionId").map(_.toInt).getOrElse(0)
+
+      logger.debug("Got for last action id: {}", lastActionId)
       async {
-        gameRepo.findOne(new ObjectId(id)) match {
-          case Some(game) if game.state == GameState.FINISHED || request.user.isAdmin =>
-            JsonResponse.ok(game.getActionList.filter(_.actionId > lastActionId))
-          case Some(game) if id.equals(request.user.currentGameId.map(_.toString).orNull) =>
-            JsonResponse.ok(game.mask(request.user).getActionList.filter(_.actionId > lastActionId))
+        gameRepo.findOne(id) match {
+          case Some(game: StrategoGame) if game.state == GameState.FINISHED || request.user.isAdmin =>
+            JsonResponse.ok(game.getActionList.filter(_.actionId > lastActionId).toArray)
+          case Some(game: StrategoGame) if id.equals(request.user.currentGameId.map(_.toString).orNull) =>
+            JsonResponse.ok(game.mask(request.user).getActionList.filter(_.actionId > lastActionId).toArray)
           case _ =>
             JsonResponse.notFound
         }
@@ -178,56 +168,14 @@ class GameController extends AbstractController with InitializingBean {
       }
   }
 
-  def getTestGameState = Action {
+  def cancelCurrentGame = Authenticated {
     implicit request =>
-      request.getQueryString("blue") match {
-        case Some(_) =>
-          JsonResponse.ok(generateGameStateAsBlue)
+      request.user.currentGameId match {
+        case Some(id) =>
+          gameManager ! CancelGame(request.user)
+          JsonResponse.ok(request.user)
         case _ =>
-          JsonResponse.ok(generateGameStateAsRed)
-
+          JsonResponse.ok("Not in a game")
       }
-  }
-
-  def getTestGameActions = Action {
-    implicit request =>
-      request.getQueryString("blue") match {
-        case Some(_) =>
-          JsonResponse.ok(generateGameStateAsBlue.getActionList)
-        case _ =>
-          JsonResponse.ok(generateGameStateAsRed.getActionList)
-
-      }
-  }
-
-  val red = new User
-  val blue = new User
-  red.setUsername("red")
-  red.setId(new ObjectId())
-  blue.setUsername("blue")
-  blue.setId(new ObjectId())
-
-  def generateGameState: Game = {
-
-    val game = new StrategoGame
-    game.state = GameState.RUNNING
-    game.setRedPlayer(red)
-    game.setBluePlayer(blue)
-    game.init
-
-
-    var action: StrategoAction = PlacePieceAction(red, 1, 1, new RedPiece(StrategoTypes.GENERAL_9))
-    action.invoke(game)
-    action = PlacePieceAction(blue, 1, 10, new BluePiece(StrategoTypes.GENERAL_9))
-    action.invoke(game)
-    game
-  }
-
-  def generateGameStateAsRed: Game = {
-    generateGameState.mask(red)
-  }
-
-  def generateGameStateAsBlue: Game = {
-    generateGameState.mask(blue)
   }
 }

@@ -16,6 +16,7 @@ object JsonResponse {
       .withHeaders(HeaderNames.CONTENT_TYPE -> "application/json")
   }
   def ok[A, B](obj: A)(implicit request: Request[B]) : SimpleResult= {
+    Logger.info("Returning value: " + obj.getClass.getName)
     val json = Serializer.serializer.writerWithView(JsonViews.PUBLIC).writeValueAsString(obj)
     Logger.info(s"Returning: '$json'");
     Ok(json)

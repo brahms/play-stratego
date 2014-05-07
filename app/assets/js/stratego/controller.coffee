@@ -1,56 +1,90 @@
 angular.module('app.stratego.controller', ['app.stratego.actions', 'app.stratego.invoker', 'app.stratego.pieces'])
-    .factory('StrategoController', ['$log', '$http', '$q', 'StrategoActions', 'StrategoInvoker', 'StrategoPieces',
-(log, http, Q, StrategoActions, StrategoInvoker, StrategoPieces) ->
+    .factory('StrategoController', ['$timeout', '$log', '$http', '$q', 'StrategoActions', 'StrategoInvoker', 'StrategoPieces', 'StrategoBoard',
+(timeout, log, http, Q, StrategoActions, StrategoInvoker, StrategoPieces, StrategoBoard) ->
     {StrategoAction, PlacePieceAction, MoveAction, AttackAction, ReplacePieceAction, CommitAction} = StrategoActions
     {StrategoPiece, RedPiece, BluePiece} = StrategoPieces
     class StrategoController
-        constructor: ({gameId, board}) ->
-            if !gameId? then throw "StrategoController Game id is null"
-            if !board? then throw "StrategoController Board is null"
+        constructor: ({gameId, canvas, scope}) ->
+            if !gameId? then throw "StrategoController Game _id is null"
+            if !canvas? then throw "StrategoController Canvas is null"
+            if !scope? then throw "StrategoController Scope is null"
             @gameId = gameId
-            @board = board
             log.debug('StrategoController constructor');
             @invoker = new StrategoInvoker(gameId: @gameId, user: USER)
             @invoker.on('init', @_onInit)
             @invoker.on('data', @_onData)
-
-            @board.on 'place', @_onPiecePlaced
-            @board.on 'move', @_onPieceMoved
+            @canvas = canvas
+            @board = null
+            @scope = scope
+            scope.showCommit = true
+            scope.disableCommit = true
+            scope.commit = @commit
+            scope.showCancel = true
+            scope.cancel = @cancel
+            @actionQueue = []
         start: ->
             defer = Q.defer()
-            @board.promise
-                .then () =>
-                    @invoker.start()
+            @invoker.start()
                 .then () =>
                     defer.resolve()
                 .catch () =>
                     defer.reject()
             defer.promise
 
-        _onData: (action) =>
-            
+        _onData: (actions) =>
+            log.debug("On Data: #{angular.toJson(actions)}")
+            actions.forEach (action) =>
+                action = StrategoAction.fromJson(action)
+                log.debug("Created action: #{action}")
+                @actionQueue.push(action)
+
         _onInit: (game) =>
+            log.debug("On init: #{angular.toJson(game)}")
             if (game.state == 'PENDING')
                 log.debug("Game still in pending state")
+                @_createOrIgnoreBoard(game)
             else if (game.state == 'RUNNING')
-                @invoker.startGrabbingActions()
-                log.debug("Initializing from #{angular.toJson(game)}")
-                @board.setRunning()
-                actions = (StrategoAction.fromJson(jsonAction) for jsonAction in  game.actionList)
-                promises = []
-                actions.forEach (action) =>
-                    log.debug("#{@} applying action: #{action}")
-                    promises.push(action.apply(@board))
-                Q.all(promises)
-                    .finally () =>
-                        log.debug("Finished applying actions")
-                        @board.setPhase(game.phase)
-                        switch game.phase
-                            when "PLACE_PIECES" 
-                                @board.enableSideboard()
+                timeout( () =>
+                    log.debug("Applying scope")
+                    @scope.$apply () =>
+                        log.debug("Setting show cancel to false")
+                        @scope.showCancel = false
+                )
+                @_createOrIgnoreBoard(game).then () =>
+                    log.debug("Initializing from #{angular.toJson(game)}")
+                    @board.setRunning()
+                    actions = (StrategoAction.fromJson(jsonAction) for jsonAction in  game.actionList)
+                    promises = []
+                    actions.forEach (action) =>
+                        log.debug("#{@} applying action: #{action}")
+                        promises.push(action.apply(@board))
+                    Q.all(promises)
+                        .finally () =>
+                            log.debug("Finished applying actions")
+                            @board.setPhase(game.phase)
+                            switch game.phase
+                                when "PLACE_PIECES" 
+                                    log.debug("Enable sideboard")
+                                    @board.enableSideboard()
+                                else 
+                                    timeout () =>
+                                        @scope.$apply () =>
+                                            log.debug("Setting show commit to false")
+                                            @scope.showCommit = false
+                            @board.enableDragging()
+                            @board.draw()
+                            @invoker.startGrabbingActions()
+                            timeout @_invokeAnyAction
 
-                        @board.enableDragging()
-                        @board.draw()
+        _invokeAnyAction: () =>
+            if @actionQueue.length > 0
+                action = @actionQueue.shift()
+                log.debug("Invoking action on board: #{action}")
+                action.apply(action).finally () =>
+                    timeout @_invokeAnyAction, 1000
+            else
+                log.debug("No actions to invoke")
+                timeout @_invokeAnyAction, 1000
 
         _onPieceMoved: (piece, pos) =>
             log.debug("#{@} _onPieceMoved: #{piece}")
@@ -98,6 +132,20 @@ angular.module('app.stratego.controller', ['app.stratego.actions', 'app.stratego
                 log.debug("Invalid move")
                 piece.reset()
 
+        commit: =>
+            log.debug("#{@} commit called")
+        cancel: =>
+            log.debug("#{@} Cancel called")
+            @invoker.stop()
+            http({
+                method: 'POST'
+                url: '/api/games/cancel'
+            }).finally(() =>
+                timeout( () =>
+                    @scope.$apply () => 
+                        @scope.currentGameId = null
+                )
+            )
 
         _onPiecePlaced: (piece, pos) =>
             log.debug("#{@} _onPiecePlaced: #{piece}")
@@ -118,7 +166,24 @@ angular.module('app.stratego.controller', ['app.stratego.actions', 'app.stratego
             piece.reset()
 
 
-
+        _createOrIgnoreBoard: (game) -> 
+            log.debug("_createOrIgnoreBoard: " + @board)
+            d = Q.defer()
+            if @board is null
+                if (game.redPlayer.username is USER.username) 
+                    log.debug("Creating board for red player")
+                    @board = new StrategoBoard(canvas: @canvas, isRed: true)
+                else 
+                    log.debug("Creating board for blue player")
+                    @board = new StrategoBoard(canvas: @canvas, isRed: false)
+                @board.init().finally () =>
+                        @board.draw()
+                        @board.on 'place', @_onPiecePlaced
+                        @board.on 'move', @_onPieceMoved
+                        d.resolve()
+            else
+                d.resolve()
+            d.promise
         toString: ->
             "StrategoController[#{@gameId}]"
     

@@ -10,6 +10,7 @@ import brahms.model.stratego.{StrategoAction, StrategoGame}
 import brahms.serializer.Serializer
 
 case class CreateGame(user: User, gameType: String)
+case class CancelGame(user: User)
 case class Failed(reason: String)
 case class CreateGameSucceeded(game: Game)
 case class JoinGame(user: User, gameId: String)
@@ -67,7 +68,7 @@ class GameManager @Inject() (userRepo: UserRepository, gameRepo: GameRepository)
         game.players = Seq(user.toSimpleUser)
         game.timeouts = Map(user.username -> (System.currentTimeMillis() + Game.TIMEOUT))
         gameRepo.save(game)
-        user.setCurrentGameId(Some(game.getId))
+        user.setCurrentGameId(Some(game.getId.toString))
         logger.debug("Setting current user game to {}", Serializer.serializer.writeValueAsString(user))
         userRepo.save(user)
         pendingGames += game.getId.toString -> game
@@ -118,7 +119,7 @@ class GameManager @Inject() (userRepo: UserRepository, gameRepo: GameRepository)
           runningGames.get(id.toString) match {
             case Some(game : StrategoGame) =>
               val action = Serializer.serializer.readValue(req.actionJson, classOf[StrategoAction])
-
+              action.setUser(req.user.toSimpleUser)
               if (action.isLegal(game)) {
                 logger.debug("Action is legal, invoking: {}", action)
                 action.invoke(game)
@@ -173,6 +174,23 @@ class GameManager @Inject() (userRepo: UserRepository, gameRepo: GameRepository)
           }
       }
       logger.debug("Done checking for timeouts")
+    case CancelGame(user) =>
+
+      user.currentGameId match {
+        case Some(id) =>
+          val gameId = id.toString
+          if (pendingGames.contains(gameId)) {
+            val game = pendingGames.get(gameId).get
+            logger.debug("Canceling game: {}", game)
+            game.setState(GameState.CANCELED)
+            pendingGames -= gameId
+            gameRepo.save(game)
+            user.setCurrentGameId(None)
+            userRepo.save(user)
+          }
+        case _ =>
+          logger.warn("Ignoring cancelGame Request from user who has no game id: {}", user)
+      }
     case msg =>
       logger.warn("Failed: Unknown msg received: {}", msg)
       sender ! Failed("Unknown")

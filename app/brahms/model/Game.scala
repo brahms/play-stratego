@@ -1,13 +1,13 @@
 package brahms.model
 
 import scala.beans.BeanProperty
-import org.jongo.marshall.jackson.oid.Id
-import org.bson.types.ObjectId
+import org.jongo.marshall.jackson.oid.{ObjectId, Id}
 import com.fasterxml.jackson.annotation.{JsonTypeInfo, JsonSubTypes}
 import com.fasterxml.jackson.annotation.JsonSubTypes.Type
 import brahms.model.stratego.StrategoGame
-import org.joda.time.DateTime
 import scala.concurrent.duration._
+import scala.collection.mutable
+import org.jongo.marshall.jackson.oid
 
 object Game {
   val TIMEOUT = (60 seconds).toMillis
@@ -19,19 +19,18 @@ object Game {
 abstract class Game {
   def getType: String
 
-
-
   @Id
-  @BeanProperty
-  var id : ObjectId = _;
+  @ObjectId
+  var id : String = _;
+
+  def setId(id: String) : Unit = this.id = id
+  def getId = id
 
   @BeanProperty
   var state: GameState = GameState.PENDING
 
   @BeanProperty
   var creator: User = _
-
-  def getActionList: Seq[GameAction[_]]
 
   def mask(user: User) : Game
 

@@ -4,8 +4,7 @@ import org.springframework.security.crypto.bcrypt.BCrypt
 import brahms.util.WithLogging
 import com.fasterxml.jackson.annotation.{JsonProperty, JsonView}
 import brahms.serializer.{Serializer, JsonViews}
-import org.jongo.marshall.jackson.oid.Id
-import org.bson.types.ObjectId
+import org.jongo.marshall.jackson.oid.{ObjectId, Id}
 
 object User extends WithLogging{
   val USERNAME_PATTERN = "[a-zA-Z][a-zA-Z0-9]{3,10}"
@@ -34,8 +33,10 @@ object User extends WithLogging{
 class User {
 
   @Id
+  @ObjectId
   @BeanProperty
-  var id: ObjectId = _;
+  @JsonView(Array(classOf[JsonViews.ServerOnly]))
+  var id: String = _
 
   @BeanProperty
   var username: String = _;
@@ -45,11 +46,12 @@ class User {
   var password: String = _;
 
   @BooleanBeanProperty
+  @JsonView(Array(classOf[JsonViews.Private]))
   var admin: Boolean = _;
 
   @BeanProperty
   @JsonView(Array(classOf[JsonViews.Public]))
-  var currentGameId: Option[ObjectId] = None
+  var currentGameId: Option[String] = None
 
   @BooleanBeanProperty
   @JsonView(Array(classOf[JsonViews.ServerOnly]))
@@ -69,6 +71,7 @@ class User {
   var playedGames: Seq[String] = Seq()
 
   @JsonProperty
+  @JsonView(Array(classOf[JsonViews.Private]))
   def stats = {
     if (!isSimple)  Map (
       "won" -> wonGames.length,
@@ -83,11 +86,10 @@ class User {
   def validatePassword(password: String) : Boolean = BCrypt.checkpw(password, this.password)
 
 
-  override def toString = s"User(username: $username, id: $id, admin: $admin)"
+  override def toString = s"User(username: $username, currentGameId: $currentGameId)"
 
   def toSimpleUser: User = {
     val user = new User
-    user.setId(id)
     user.setUsername(username)
     user.setSimple(true)
     user

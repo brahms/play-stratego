@@ -9,11 +9,11 @@ angular.module('app.stratego.invoker', [])
             @gameId = gameId
             @user = user
             @lastActionId = 0
-            @phase = 'init'
+            @invokerPhase = 'init'
 
             "#{@} constructor"
         startGrabbingActions: () ->
-            @phase = 'actions'
+            @invokerPhase = 'actions'
         invoke: (action) ->
             defer = Q.defer()
             defer.resolve()
@@ -36,7 +36,6 @@ angular.module('app.stratego.invoker', [])
             defer = Q.defer()
             http({
                 url: "/api/games/#{@gameId}"
-                lastActionId: 0
             }).success((data)=>
                 @_updateActionId(data)
                 @emit('init', data)
@@ -48,45 +47,54 @@ angular.module('app.stratego.invoker', [])
             )
             defer.promise.then () =>
                 "#{@} done loading"
+        stop: ->
+            @_onInterval = () ->
 
         _updateActionId: (data) ->
-            log.debug("#{@} updateActionId")
+            log.debug("#{@} updateActionId to : #{data.actionId}")
 
             if data.actionList?.length > 0
                 @lastActionId = data.actionList[data.actionList.length-1].actionId
 
             log.debug("#{@} Updated to : #{@lastActionId}")
         _onInterval: =>
-            log.debug("#{@} onInterval, phase = #{@phase}")
-            if @phase == 'init'
+            log.debug("#{@} onInterval, invokerPhase = #{@invokerPhase}")
+            if @invokerPhase == 'init'
                 http({
                     url: "/api/games/#{@gameId}"
                     data: {
                         lastActionId : @lastActionId
                     }
-                }).success( (data) =>
+                }).success( (game) =>
                     log.debug("#{@} Got more game state")
-                    @_updateActionId(data)
-                    @emit('init', data)
+                    if (game.state == "PENDING") 
+                        log.debug("INVOKER - Game still in pending state")
+                        return
+                    else 
+                        log.debug("INVOKER - game is in #{game.state} state")
+                    @emit('init', game)
                 ).error( () =>
-                    log.error("#{@} Error getting data in onInterval")
+                    log.error("#{@} Error getting game in onInterval")
                 ).finally( () =>
                     $window.setTimeout(@_onInterval, 5 * 1000)
                 )
-            else if @phase == 'actions'
+            else if @invokerPhase == 'actions'
                 http({
-                    url: "/api/games/#{@gameId}/actions"
+                    url: "/api/games/#{@gameId}/actions?lastActionId=#{@lastActionId}"
                     data: {
                         lastActionId : @lastActionId
                     }
                 }).success( (data) =>
-                    log.debug("#{@} Got more game state")
-                    @_updateActionId(data)
-                    @emit('data', data)
+                    if (data.length)
+                        log.debug("#{@} Got more game state")
+                        @_updateActionId(data)
+                        @emit('data', data)
+                    else
+                        log.debug("#{@} No new actions")
                 ).error( () =>
                     log.error("#{@} Error getting data in onInterval")
                 ).finally( () =>
-                    #$window.setTimeout(@_onInterval, 1 * 1000)
+                    $window.setTimeout(@_onInterval, 1 * 5000)
                 )
 
         toString: ->

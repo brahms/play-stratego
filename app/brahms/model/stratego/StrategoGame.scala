@@ -9,10 +9,11 @@ import brahms.util.WithLogging
 import scala.util.control.Breaks._
 import com.fasterxml.jackson.annotation.{JsonView, JsonProperty, JsonIgnore}
 import brahms.serializer.JsonViews._
-import brahms.serializer.JsonViews
+import brahms.serializer.{Serializer, JsonViews}
 import brahms.model.stratego.StrategoTypes.Boundary
 import brahms.model.stratego.StrategoTypes.Empty
 import org.joda.time.DateTime
+import brahms.model.stratego.StrategoAction
 
 object StrategoGame extends WithLogging {
 
@@ -28,6 +29,10 @@ class StrategoGame extends Game {
    * Our board is really just a 2d matrix of StrategoTypes
    */
   type Board = Array[Array[StrategoType]]
+
+
+  @BeanProperty
+  var actionList: mutable.Buffer[StrategoAction] = new mutable.ListBuffer[StrategoAction]
 
   @BeanProperty
   @JsonView(Array(classOf[JsonViews.Private]))
@@ -93,10 +98,6 @@ class StrategoGame extends Game {
   @JsonProperty
   def phase: String = getStrategoState.toString()
 
-  var actionList: mutable.Buffer[StrategoAction] = new mutable.ListBuffer[StrategoAction]
-
-
-  override def getActionList: Seq[GameAction[StrategoGame]] = actionList
 
   /**
    * Swaps the currentPlayer (basically ending a turn)
@@ -310,28 +311,34 @@ class StrategoGame extends Game {
     b.append(s"\nGame state: $state")
     b.append(s"\nGame phase: $phase")
     b.append(s"\nRed player: $redPlayer")
+    b.append(s"${if(redPlayerReady) "(Not Ready)" else ""}")
     b.append(s"\nBlue player: $bluePlayer")
+    b.append(s"${if(bluePlayerReady) "(Not Ready)" else ""}")
     b.append(s"\nPlayers turn: $currentPlayer")
-    b.append("\n\n")
-    (11 to 0 by -1).foreach {
-      y =>
-        (0 to 11).foreach {
-          x =>
-            b.append(board(x)(y).toShortHand)
-        }
-        b.append("\n")
-    }
-    b.append("\nRed SideBoard: | ")
+    if (actionList.nonEmpty)
+      b.append(s"\nLast Action: ${Serializer.serializer.writeValueAsString(actionList.last)}")
+    if (state == GameState.RUNNING) {
+      b.append("\n\n")
+      (11 to 0 by -1).foreach {
+        y =>
+          (0 to 11).foreach {
+            x =>
+              b.append(board(x)(y).toShortHand)
+          }
+          b.append("\n")
+      }
+      b.append("\nRed SideBoard: | ")
 
-    (MINVAL to MAXVAL).foreach {
-      f =>
-        b.append(" " + new RedPiece(f).toShortHand + s" (${redSideboard(f - 1).size}) |")
-    }
+      (MINVAL to MAXVAL).foreach {
+        f =>
+          b.append(" " + new RedPiece(f).toShortHand + s" (${redSideboard(f - 1).size}) |")
+      }
 
-    b.append("\nBlu SideBoard: | ")
-    (MINVAL to MAXVAL).foreach {
-      f =>
-        b.append(" " + new BluePiece(f).toShortHand + s" (${blueSideboard(f - 1).size}) |")
+      b.append("\nBlu SideBoard: | ")
+      (MINVAL to MAXVAL).foreach {
+        f =>
+          b.append(" " + new BluePiece(f).toShortHand + s" (${blueSideboard(f - 1).size}) |")
+      }
     }
     b.append("\n")
     b.toString()
@@ -467,7 +474,7 @@ class StrategoGame extends Game {
     game.setRedPlayer(redPlayer)
     game.setCurrentPlayer(currentPlayer)
     game.setBoard(maskBoard(user))
-    game.actionList = actionList.map(_.mask(user))
+    game.actionList = actionList.map(_.mask(user).asInstanceOf[StrategoAction])
     game.setStrategoState(strategoState)
     game.setState(state)
     game.setId(id)

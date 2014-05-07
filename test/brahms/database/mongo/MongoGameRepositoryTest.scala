@@ -60,7 +60,7 @@ class MongoGameRepositoryTest extends FunSuite with BeforeAndAfter {
   test ("Update a game") {
     game.setBluePlayer(bluePlayer)
     game.init
-    val action = new PlacePieceAction(bluePlayer, 1,10, new BluePiece(MAJOR_7))
+    val action = PlacePieceAction(1,10, new BluePiece(MAJOR_7)).withUser(bluePlayer)
     assert(action.isLegal(game))
     action.invoke(game)
     gameRepo.save(game)

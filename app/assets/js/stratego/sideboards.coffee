@@ -176,10 +176,12 @@ angular.module('app.stratego.sideboards', ['app.stratego.actions',
             log.debug "#{@} enableDragging"
             for val, square of @squares
                 square.draggableOn()
+                log.debug("Enabled #{val} for dragging")
         disableDragging: ->
             log.debug "#{@} disableDragging"
             for val, square of @squares
                 square.draggableOff()
+                log.debug("Disabled #{val} for dragging")
         getCount: (value) ->
             @squares[value].count
         initForRunningPhase: ->

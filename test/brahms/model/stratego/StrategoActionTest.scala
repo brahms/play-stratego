@@ -2,7 +2,7 @@ package brahms.model.stratego
 
 import org.scalatest.{BeforeAndAfter, FunSuite}
 import brahms.model.stratego.StrategoActions._
-import brahms.model.User
+import brahms.model.{GameAction, User}
 import brahms.model.stratego.StrategoTypes._
 import brahms.serializer.Serializer
 import brahms.model.stratego.StrategoActions.MoveAction
@@ -21,11 +21,9 @@ class StrategoActionTest extends FunSuite with BeforeAndAfter {
     redUser = new User
     redUser.setAdmin(false)
     redUser.setUsername("redUser")
-    redUser.setId(new ObjectId())
     blueUser = new User
     blueUser.setAdmin(false)
     blueUser.setUsername("blueUser")
-    blueUser.setId(new ObjectId())
     game = new StrategoGame
     game.setRedPlayer(redUser)
     game.setBluePlayer(blueUser)
@@ -36,18 +34,17 @@ class StrategoActionTest extends FunSuite with BeforeAndAfter {
 
     val piece = new BluePiece(MAJOR_7)
     val piece2 = new BluePiece(GENERAL_9)
-    val placePieceAction = PlacePieceAction(redUser.toSimpleUser, 1, 10 , piece)
-    val placePieceAction2 = PlacePieceAction(redUser, 2,10, piece2)
+    val placePieceAction = PlacePieceAction(1, 10 , piece).withUser(redUser.toSimpleUser)
+    val placePieceAction2 = PlacePieceAction(2,10, piece2).withUser(redUser.toSimpleUser)
     placePieceAction.invoke(game)
     placePieceAction2.invoke(game)
 
     assertResult(piece)(game.getPiece(1,10))
     assertResult(piece2)(game.getPiece(2,10))
 
-    var replacePieceAction = ReplacePieceAction(redUser, 1, 10, 2, 10)
+    var replacePieceAction = ReplacePieceAction(1, 10, 2, 10).withUser(redUser.toSimpleUser).asInstanceOf[ReplacePieceAction]
 
     val json = serializer.writeValueAsString(replacePieceAction)
-
     replacePieceAction = serializer.readValue(json, classOf[StrategoAction]).asInstanceOf[ReplacePieceAction]
     assertResult(1)(replacePieceAction.x)
     assertResult(10)(replacePieceAction.y)
@@ -58,16 +55,19 @@ class StrategoActionTest extends FunSuite with BeforeAndAfter {
 
     replacePieceAction.invoke(game)
 
-    assertResult(Empty)(game.getPiece(1,10))
+    assertResult(Empty())(game.getPiece(1,10))
     assertResult(piece)(game.getPiece(2,10))
 
+    val actions = List[StrategoAction](replacePieceAction)
+
+    println(Serializer.serializer.writeValueAsString(actions.toArray))
 
 
   }
   test("PlacePieceAction") {
     val piece = new BluePiece(MAJOR_7)
 
-    val placePieceAction = PlacePieceAction(redUser.toSimpleUser, 1, 10 , piece)
+    val placePieceAction = PlacePieceAction(1, 10 , piece).withUser(redUser.toSimpleUser).asInstanceOf[ReplacePieceAction]
     val json = serializer.writeValueAsString(placePieceAction)
     val actualAction = serializer.readValue(json, classOf[StrategoAction])
     assert(actualAction.isInstanceOf[PlacePieceAction])
@@ -96,7 +96,7 @@ class StrategoActionTest extends FunSuite with BeforeAndAfter {
 
   test("AttackAction") {
     game.setStrategoState(StrategoState.RUNNING)
-    val attackActionToSerialize = AttackAction(redUser.toSimpleUser, 1, 1, 1, 2)
+    val attackActionToSerialize = AttackAction(1, 1, 1, 2).withUser(redUser.toSimpleUser).asInstanceOf[AttackAction]
     val json = serializer.writeValueAsString(attackActionToSerialize)
     println(json)
     val attackAction = serializer.readValue(json, classOf[StrategoAction])
@@ -124,8 +124,8 @@ class StrategoActionTest extends FunSuite with BeforeAndAfter {
     game.setPiece(2,1, redScout)
     game.setStrategoState(StrategoState.RUNNING)
 
-    var captainMove = MoveAction(redUser, 1, 1, 1, 2)
-    var scoutMove = MoveAction(redUser, 2, 1, 2, 4)
+    var captainMove = MoveAction(1, 1, 1, 2).withUser(redUser.toSimpleUser).asInstanceOf[MoveAction]
+    var scoutMove = MoveAction(2, 1, 2, 4).withUser(redUser.toSimpleUser).asInstanceOf[MoveAction]
 
     var json = serializer.writeValueAsString(captainMove)
     captainMove = serializer.readValue(json, classOf[StrategoAction]).asInstanceOf[MoveAction]
@@ -154,19 +154,19 @@ class StrategoActionTest extends FunSuite with BeforeAndAfter {
     assertResult(2)(game.actionList.size)
 
     // empty -> anywhere
-    var invalidMove = MoveAction(redUser, 1, 1, 1, 2)
+    var invalidMove = MoveAction(1, 1, 1, 2).withUser(redUser)
     assert(!invalidMove.isLegal(game))
     // non scout with more than two spaces
-    invalidMove = MoveAction(redUser, 1, 2, 1, 4)
+    invalidMove = MoveAction(1, 2, 1, 4).withUser(redUser)
     assert(!invalidMove.isLegal(game))
     // diagonal
-    invalidMove = MoveAction(redUser, 1, 2, 2, 3)
+    invalidMove = MoveAction( 1, 2, 2, 3).withUser(redUser)
     assert(!invalidMove.isLegal(game))
   }
 
   test("CommitAction") {
-    var commitActionRed = CommitAction(redUser)
-    var commitActionBlue = CommitAction(blueUser)
+    var commitActionRed = CommitAction().withUser(redUser.toSimpleUser)
+    var commitActionBlue = CommitAction().withUser(blueUser.toSimpleUser)
 
     var json = serializer.writeValueAsString(commitActionRed)
     commitActionRed = serializer.readValue(json, classOf[StrategoAction]).asInstanceOf[CommitAction]
@@ -199,21 +199,21 @@ class StrategoActionTest extends FunSuite with BeforeAndAfter {
 
   test("Cheating PlacePieceAction") {
     // should not be able to place a blue piece down on the red side
-    var action = PlacePieceAction(blueUser, 1, 1, new BluePiece(MINER_3))
+    var action = PlacePieceAction(1, 1, new BluePiece(MINER_3)).withUser(blueUser.toSimpleUser)
     assert(!action.isLegal(game))
     // should not be able to place a red piece down on the blue side
-    action = PlacePieceAction(blueUser, 1, 10, new RedPiece(MINER_3))
+    action = PlacePieceAction(1, 10, new RedPiece(MINER_3)).withUser(blueUser.toSimpleUser)
     assert(!action.isLegal(game))
 
     // should not be able to put more than two marshals down
-    action = PlacePieceAction(redUser, 1, 1, new RedPiece(MARSHAL_10))
+    action = PlacePieceAction(1, 1, new RedPiece(MARSHAL_10)).withUser(redUser.toSimpleUser).asInstanceOf[PlacePieceAction]
     action.invoke(game)
     assert(game.getRedSideboardFor(MARSHAL_10).isEmpty)
-    action = PlacePieceAction(redUser, 1, 2, new RedPiece(MARSHAL_10))
+    action = PlacePieceAction(1, 2, new RedPiece(MARSHAL_10)).withUser(redUser.toSimpleUser).asInstanceOf[PlacePieceAction]
     assert(!action.isLegal(game))
 
     // should not be able to place a diff color piece
-    action = PlacePieceAction(blueUser, 1, 10, new RedPiece(SCOUT_2))
+    action = PlacePieceAction(1, 10, new RedPiece(SCOUT_2)).withUser(blueUser.toSimpleUser)
     assert(!action.isLegal(game))
 
   }
@@ -223,36 +223,36 @@ class StrategoActionTest extends FunSuite with BeforeAndAfter {
     game.setPiece(2,1, new RedPiece(MAJOR_7))
     game.setPiece(1,2, new BluePiece(MAJOR_7))
     // should not be able to attack with a bomb
-    var action = AttackAction(redUser, 1, 1, 1, 2)
+    var action = AttackAction(1, 1, 1, 2).withUser(redUser.toSimpleUser)
     assert(!action.isLegal(game))
 
     // should not be able to attack own piece
-    action = AttackAction(redUser, 2, 1, 1, 1)
+    action = AttackAction(2, 1, 1, 1).withUser(redUser.toSimpleUser)
     assert(!action.isLegal(game))
 
     // should not be able to attack with diff color
-    action = AttackAction(redUser, 1, 2, 1, 1)
+    action = AttackAction(1, 2, 1, 1).withUser(redUser.toSimpleUser)
     assert(!action.isLegal(game))
   }
 
   test("Cheating replace action") {
     game.setPiece(1, 1, new RedPiece(MAJOR_7))
     // should not be able to replace another users piece
-    var action = ReplacePieceAction(blueUser, 1, 1, 1, 2)
+    var action = ReplacePieceAction(1, 1, 1, 2).withUser(blueUser.toSimpleUser)
     assert(!action.isLegal(game))
 
     // should not be able to replace your piece to the other side
-    action = ReplacePieceAction(redUser, 1, 1, 1, 10)
+    action = ReplacePieceAction(1, 1, 1, 10).withUser(redUser.toSimpleUser)
     assert(!action.isLegal(game))
 
     // should not be able to replace your piece to a boundary
-    action = ReplacePieceAction(redUser, 1, 1, 2, 5)
+    action = ReplacePieceAction(1, 1, 2, 5).withUser(redUser.toSimpleUser)
     assert(!action.isLegal(game))
-    action = ReplacePieceAction(redUser, 1, 1, 3, 5)
+    action = ReplacePieceAction(1, 1, 3, 5).withUser(redUser.toSimpleUser)
     assert(!action.isLegal(game))
-    action = ReplacePieceAction(redUser, 1, 1, 2, 6)
+    action = ReplacePieceAction(1, 1, 2, 6).withUser(redUser.toSimpleUser)
     assert(!action.isLegal(game))
-    action = ReplacePieceAction(redUser, 1, 1, 3, 6)
+    action = ReplacePieceAction(1, 1, 3, 6).withUser(redUser.toSimpleUser)
     assert(!action.isLegal(game))
   }
 

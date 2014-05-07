@@ -7,6 +7,7 @@ import javax.inject.{Singleton, Named, Inject}
 import brahms.database.{UserRepository, GameRepository}
 import org.bson.types.ObjectId
 import scala.Some
+import brahms.model.Game
 
 @Named
 @Singleton
@@ -21,7 +22,7 @@ class DebugController extends AbstractController{
   def getGame(id: String) = Action.async {
     implicit request =>
       async {
-        gameRepo.findOne(new ObjectId(id)) match {
+        gameRepo.findOne(id) match {
           case Some(game) =>
             Results.Ok(game.stateToString)
           case _ =>
@@ -32,9 +33,21 @@ class DebugController extends AbstractController{
 
   def getGames = Action.async { implicit request =>
     async {
-      Results.Ok(gameRepo.findAll().map(_.stateToString).reduce(_ + "\n" + _))
+      Results.Ok(gameRepo.findAll().foldLeft[String]("")((str, game) => str + game.stateToString + "\n"))
     }
   }
 
+  def reset = Action {implicit request =>
+    userRepo.deleteAll()
+    gameRepo.deleteAll()
+    System.exit(-1)
+    JsonResponse.ok("")
+  }
+
+  def getUsers = Action.async {implicit request =>
+    async {
+      JsonResponse.ok(userRepo.findAll())
+    }
+  }
 
 }

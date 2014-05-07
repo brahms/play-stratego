@@ -43,17 +43,15 @@ class GameManagerFunctionalTest extends Specification with WithLogging {
 
   val serializer = Serializer.serializer
   val PLAYER1 = new User
-  PLAYER1.setId(new ObjectId())
   PLAYER1.setAdmin(false)
   PLAYER1.setUsername("player1")
 
   implicit val timeout = Timeout((5 seconds).inMillis)
   implicit val timeoutDuration = timeout.duration
   val PLAYER2 = new User
-  PLAYER2.setId(new ObjectId())
   PLAYER2.setUsername("player2")
   PLAYER2.setAdmin(false)
-  var gameId: ObjectId = null
+  var gameId: String = null
 
 
   "GameManager" should {
@@ -80,7 +78,7 @@ class GameManagerFunctionalTest extends Specification with WithLogging {
         val result = gameManager ? CreateGame(player, "stratego") map {
           case success: CreateGameSucceeded =>
             gameId = success.game.id
-            (success.game should beAnInstanceOf[StrategoGame]) and (success.game.getId should not beNull)
+            (success.game should beAnInstanceOf[StrategoGame])
           case result =>
             ko("Invalid response: " + result)
         }
@@ -137,10 +135,9 @@ class GameManagerFunctionalTest extends Specification with WithLogging {
       game.get.bluePlayer should beEqualTo(PLAYER2)
       game.get.state should beEqualTo(GameState.RUNNING)
       game.get.strategoState should beEqualTo(StrategoState.PLACE_PIECES)
-      game.get.id should not beNull
     }
     "Player 1 should be able to place a piece" in {
-      val json = serializer.writeValueAsString(PlacePieceAction(PLAYER1, 1, 1, new RedPiece(StrategoTypes.SCOUT_2)))
+      val json = serializer.writeValueAsString(PlacePieceAction(1, 1, new RedPiece(StrategoTypes.SCOUT_2)).withUser(PLAYER1))
       val player1 = userRepo.findByUsername("player1").get
       val result = gameManager ? InvokeActionRequest(player1, json) map {
         case Failed(reason) => ko("Failed to invoke action: " + reason)
@@ -150,13 +147,13 @@ class GameManagerFunctionalTest extends Specification with WithLogging {
       Await.result(result, timeoutDuration)
     }
     "Player 2 should be able to place several pieces in consecutive requests before player 1 for the place pieces phase" in {
-      var json = serializer.writeValueAsString(PlacePieceAction(PLAYER2, 1, 9, new BluePiece(StrategoTypes.SCOUT_2)))
+      var json = serializer.writeValueAsString(PlacePieceAction(1, 9, new BluePiece(StrategoTypes.SCOUT_2)).withUser(PLAYER2))
       val player2 = userRepo.findByUsername("player2").get
 
       val result1 = Await.result((gameManager ? InvokeActionRequest(player2, json)).map(_ should beLike {case InvokeActionSucceeded => ok}), timeoutDuration)
-      json = serializer.writeValueAsString(PlacePieceAction(PLAYER2, 1, 8, new BluePiece(StrategoTypes.SCOUT_2)))
+      json = serializer.writeValueAsString(PlacePieceAction(1, 8, new BluePiece(StrategoTypes.SCOUT_2)).withUser(PLAYER2))
       val result2 = Await.result((gameManager ? InvokeActionRequest(player2, json)).map(_ should beLike {case InvokeActionSucceeded => ok}), timeoutDuration)
-      json = serializer.writeValueAsString(PlacePieceAction(PLAYER2, 1, 7, new BluePiece(StrategoTypes.SCOUT_2)))
+      json = serializer.writeValueAsString(PlacePieceAction( 1, 7, new BluePiece(StrategoTypes.SCOUT_2)).withUser(PLAYER2))
       val result3 = Await.result((gameManager ? InvokeActionRequest(player2, json)).map(_ should beLike {case InvokeActionSucceeded => ok}), timeoutDuration)
 
       result1 and result2 and result3

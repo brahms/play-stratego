@@ -9,18 +9,18 @@ import org.springframework.stereotype.Repository
 import org.bson.types.ObjectId
 import javax.inject.Inject
 import org.jongo.Jongo
-
+import org.jongo.Oid.withOid;
 
 @Repository
 class MongoGameRepository @Inject()(jongo: Jongo) extends AbstractMongoRepository(jongo) with GameRepository {
   val GAMES = "games";
   val games = jongo.getCollection(GAMES)
-  override def findOne(id: ObjectId): Option[Game] = {
-    Option(games.findOne(id).as(classOf[Game]))
+  override def findOne(id: String): Option[Game] = {
+    Option(games.findOne(withOid(id)).as(classOf[Game]))
   }
 
   override def findAll(ids: Iterable[String]): Seq[Game] = {
-    games.find("{_id: {$in:#}}", ids.asJava).as(classOf[Game]).asScala.toSeq
+    games.find("{id: {$in:#}}", ids.asJava).as(classOf[Game]).asScala.toSeq
   }
 
   override def deleteAll(): Unit = {
@@ -30,10 +30,10 @@ class MongoGameRepository @Inject()(jongo: Jongo) extends AbstractMongoRepositor
   }
 
   override def delete(entities: Iterable[_ <: Game]): Unit = {
-    games.remove("{_id: {$in:#}}", entities.map(_.getId))
+    games.remove("{id: {$in:#}}", entities.map(_.getId))
   }
 
-  override def delete(id: ObjectId): Unit = {
+  override def delete(id: String): Unit = {
     games.remove(id)
   }
 
@@ -41,14 +41,16 @@ class MongoGameRepository @Inject()(jongo: Jongo) extends AbstractMongoRepositor
     games.count()
   }
 
-  override def exists(id: ObjectId): Boolean = {
-    val count = games.count("{_id: #}", id)
+  override def exists(id: String): Boolean = {
+    val count = games.count("{id: #}", id)
     logger.debug("Got count: {} for id: {}", count, id)
     count > 0
   }
 
   override def save[S <: Game](entity: S): S = {
     logger.debug("Saving game")
+
+    if (entity.id == null) entity.id = new ObjectId().toString
     games.save(entity)
     logger.debug("Game saved: {}", entity)
     entity
@@ -65,7 +67,7 @@ class MongoGameRepository @Inject()(jongo: Jongo) extends AbstractMongoRepositor
     games.find("{state: #}", GameState.PENDING.toString).as(classOf[Game]).asScala.toSeq
   }
 
-  override def findOnePending(id: ObjectId): Option[Game] = {
+  override def findOnePending(id: String): Option[Game] = {
     findOne(id) match {
       case Some(game) if (game.state == GameState.PENDING) =>
         Some(game)
@@ -73,7 +75,7 @@ class MongoGameRepository @Inject()(jongo: Jongo) extends AbstractMongoRepositor
     }
   }
 
-  override def findOneRunning(id: ObjectId): Option[Game] = {
+  override def findOneRunning(id: String): Option[Game] = {
     findOne(id) match {
       case Some(game) if (game.state == GameState.RUNNING) =>
         Some(game)
@@ -90,7 +92,9 @@ class MongoGameRepository @Inject()(jongo: Jongo) extends AbstractMongoRepositor
 
   override def save[S <: Game](entities: Iterable[S]): Unit = {
     logger.debug("saving {} games", entities.size)
-    entities.foreach(games.save(_))
+    entities.foreach { e =>
+      save(e)
+    }
   }
 
   override def findAll(): Seq[Game] = {

@@ -20,8 +20,7 @@ class UserTest extends FunSuite with WithTestExtras {
     val user = new User
     user.setPassword("bla")
     user.setAdmin(true)
-    user.setId(new ObjectId())
-    user.setCurrentGameId(Some(new ObjectId()))
+    user.setCurrentGameId(Some(new ObjectId().toString))
     val json = Serializer.serializer.writeValueAsString(user)
     println(json)
     val newUser = Serializer.serializer.readValue(json, classOf[User])
@@ -44,8 +43,24 @@ class UserTest extends FunSuite with WithTestExtras {
     val user = new User
     user.setPassword("bla")
     user.setAdmin(true)
-    user.setId(new ObjectId())
-
     println(Utility.escape(Serializer.serializer.writerWithView(JsonViews.PUBLIC).writeValueAsString(user)))
+  }
+
+  test("deserialization") {
+    val json = """|   {
+                 |        "username": "local1",
+                 |        "admin": false,
+                 |        "_id": {
+                 |            "$oid": "536874f9b968ce471508a318"
+                 |        },
+                 |        "simple": true,
+                 |        "wonGames": [],
+                 |        "lostGames": [],
+                 |        "drawnGames": [],
+                 |        "playedGames": []
+                 |    }""".stripMargin
+
+    val user = Serializer.serializer.readValue(json, classOf[User])
+    assert(user != null)
   }
 }

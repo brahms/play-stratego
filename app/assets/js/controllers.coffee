@@ -1,4 +1,4 @@
-angular.module('app.controllers', ['ngRoute', 'app.stratego'])
+angular.module('app.controllers', ['ngRoute', 'app.stratego', 'ui.bootstrap'])
     .controller('MainCtrl', ['$scope', '$route', '$routeParams', '$location', '$http', '$log',
         class MainCtrl
             constructor: (scope, $route, $routeParams, $location, http, log) ->
@@ -33,11 +33,50 @@ angular.module('app.controllers', ['ngRoute', 'app.stratego'])
                     url == $location.path()
 
     ])
-    .controller('PlayCtrl', ['$scope',
+    .controller('PlayCtrl', ['$timeout', '$scope', '$log', '$http', '$modal',
         class PlayCtrl
-            constructor: (scope) ->
+            constructor: (timeout, scope, log, http, modal) ->
                 scope.ctrl = 'PlayCtrl'
-                scope.currentGame=true
+                scope.currentGameId=USER.currentGameId or null
+                log.info("current user game _id: " + scope.currentGameId)
+                scope.createGame = -> 
+                    http({
+                        method: 'POST'
+                        url: "/api/games/create"
+                        data: {
+                            type: 'stratego'
+                        }
+                    }).success( (data) ->
+                        scope.currentGameId = data._id
+                        modal.open {
+                            template: """<p>Created game with _id: #{data._id}</p>"""
+                            size: 'sm'
+                        }
+                    ).error( (err) ->
+                        modal.open {
+                            template: """<alert type="danger">Error: #{err}</alert>"""
+                          
+                        }
+                    )
+                scope.playGame = (_id) -> 
+                    http({
+                        method: 'POST'
+                        url: "/api/games/#{_id}/join"
+                    }).success( (data) ->
+                        modal.open {
+                            template: """<p>Joined game with _id: #{data._id}</p>"""
+                            size: 'sm'
+                        }
+                        timeout ->
+                            scope.$apply ->
+                                scope.currentGameId = _id
+                    ).error ((err) ->
+                        modal.open {
+                            template: """<alert type="danger">Error: #{err}</alert>"""
+                            size: 'sm'
+                        }
+                    )
+
     ])
     .controller('SignupCtrl', ['$scope', '$log', '$http'
         class SignupCtrl
@@ -92,27 +131,15 @@ angular.module('app.controllers', ['ngRoute', 'app.stratego'])
     .controller('GameListCtrl', ['$scope', '$log', '$http',
         class GameListCtrl
             constructor: (scope, log, http) ->
+                destroyed = false
                 scope.ctrl = 'GameListCtrl'
                 games = []
-                interval = window.setInterval((() ->
-                    log.debug('List poll')
-                ), 5000)
-                for i in [1..3] 
-                    games.push {
-                        id: "12345"
-                        creator: {
-                            id: "54321"
-                            username: 'cbrahms2'
-                        }
-                        name: i
-                        state: "PENDING"
-                    }
+                destroyed = false
                 scope.shownGames = []
                 scope.totalGames = games.length
                 scope.gamesPerPage = 2
                 scope.currentPage = 1
                 scope.limitPages = 10
-                scope.createGame = -> log.info("GameListCtrl - createGame")
                 
                 resliceGames = ->
                     init = (scope.currentPage-1)*scope.gamesPerPage
@@ -120,46 +147,42 @@ angular.module('app.controllers', ['ngRoute', 'app.stratego'])
                     log.debug("init: #{init} limit: #{limit}")
                     scope.shownGames = games.slice(init, limit)
                 
+                ajax = () ->
+                    if not destroyed
+                        log.debug "GameList poll"
+                        http({
+                            url: "/api/games"
+                        }).success((data) ->
+                            if not destroyed
+                                log.debug("Updating game list to #{data.length} games")
+                                games = data
+                                scope.shownGames = games
+                                scope.totalGames = games.length
+                                # resliceGames()
+                                setTimeout(ajax, 5000)
+                        ).error((error) ->
+                            log.error("Error in ajax poll for GameList" + error)
+                        )
+
+                ajax()
                 scope.$watch 'currentPage', (newValue, oldValue) ->
                     log.debug("Current page: #{newValue} .. old: #{oldValue}")
                     resliceGames()
                 scope.$on('$destroy', (->
-                    window.clearInterval(interval)
-                ))
+                    destroyed = true
+                ))   
+           
 
     ])
     .controller('CurrentGameCtrl', ['$scope', '$log', '$http', 'StrategoFactory',
         class CurrentGameCtrl
             constructor: (scope, log, http, StrategoFactory) ->
                 scope.ctrl = "CurrentGameCtrl"
-                scope.liveGame = false
-                # angular.element('canvas').ready () =>
-                #     # @controller = new StrategoFactory.StrategoController('534f32eeb9683ad8632221a9')
-                #     @board = new StrategoFactory.StrategoBoard(canvas: 'canvas', isRed: true)
-                #     @board.init().finally () =>
-                #         @board.draw()
-                #     @ctrl = new StrategoFactory.StrategoController(board: @board, gameId: "1234")
-                #     @ctrl.start()
-                #         .then ->
-                #             log.debug("CurrentGameCtrl started game")
-                
-                scope.createGame = ->
-                    log.debug("Creating game")
-                    # http({
-                    #     method: 'POST',
-                    #     url: '/api/games/create',
-                    #     data: {
-                    #         type: 'stratego'
-                    #     }
-                    # }).success( (data) ->
-                    #     scope.liveGame = true
-                    #     scope.gameId = data.gameId
-                    #     log.debug("Created game with id: " + data.gameId)
-                        
-
-                    # ).error(->
-                    #     log.error("Unable to create game")
-                    # )
+                angular.element('canvas').ready () =>
+                    @ctrl = new StrategoFactory.StrategoController(scope: scope, canvas: 'canvas', gameId: scope.currentGameId)
+                    @ctrl.start()
+                        .then ->
+                            log.debug("CurrentGameCtrl started game")
 
     ])
     .controller('HistoryCtrl', ['$scope', '$log', 

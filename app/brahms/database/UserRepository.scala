@@ -1,7 +1,6 @@
 package brahms.database
 
 import brahms.model.{GameStats, User}
-import org.bson.types.ObjectId
 
 trait UserRepository {
   def get(user: User) : User

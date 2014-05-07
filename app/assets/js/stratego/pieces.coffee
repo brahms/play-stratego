@@ -93,14 +93,14 @@ angular.module('app.stratego.pieces', ['app.stratego.functions'])
             super('b', value)
         toJson: => {
             value: @value
-            type: 'RedPiece'
+            type: 'BluePiece'
         }
     class RedPiece extends StrategoPiece
         constructor: (value) ->
             super('r', value)
         toJson: => {
             value: @value
-            type: 'BluePiece'
+            type: 'RedPiece'
         }
 
 

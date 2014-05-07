@@ -11,10 +11,9 @@ class CommitActionTest extends FunSuite {
   test("serialization") {
     val user  = new User
     user.setUsername("bla")
-    user.setId(new ObjectId())
     user.setAdmin(false)
 
-    var action: StrategoAction = CommitAction(user)
+    var action: StrategoAction = CommitAction().withUser(user).asInstanceOf[CommitAction]
 
     val json = Serializer.serializer.writeValueAsString(action)
     println (json)

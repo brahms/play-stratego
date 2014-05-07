@@ -15,12 +15,9 @@ class StrategoGameTest extends FunSuite {
     val board = new StrategoGame
     val red = new User
     red.setUsername("red")
-    red.setId(new ObjectId())
 
     val blue = new User
     blue.setUsername("blue")
-    blue.setId(new ObjectId())
-
     board.setRedPlayer(red)
     board.setBluePlayer(blue)
     board.init
@@ -30,12 +27,11 @@ class StrategoGameTest extends FunSuite {
     board.setPiece(2,2, new BluePiece(1))
     board.strategoState = StrategoState.RUNNING
 
-    val action =  MoveAction(blue,1,1,1,2)
+    val action =  MoveAction(1,1,1,2).withUser(blue).asInstanceOf[StrategoAction]
     assert(action.isLegal(board))
     action.invoke(board)
     assert(board.board(1)(2) != Empty)
     assert(board.currentPlayer == board.bluePlayer)
-    board.actionList += action
 
     println(Serializer.serializer.writeValueAsString(board.mask(red)))
 
@@ -75,8 +71,7 @@ class StrategoGameTest extends FunSuite {
     val blue = new User
     red.setUsername("RedPlayer")
     blue.setUsername("BluePlayer")
-    red.setId(new ObjectId())
-    blue.setId(new ObjectId())
+
     game.setRedPlayer(red)
     game.setBluePlayer(blue)
     game.init
@@ -89,18 +84,18 @@ class StrategoGameTest extends FunSuite {
             val bluePiece = new BluePiece(value)
             val redPiece = new RedPiece(value)
 
-            var action = PlacePieceAction(red, x, y, redPiece)
+            var action = PlacePieceAction(x, y, redPiece).withUser(red)
             assert(action.isLegal(game))
             action.invoke(game)
-            action = PlacePieceAction(blue, x, 11-y, bluePiece)
+            action = PlacePieceAction(x, 11-y, bluePiece).withUser(blue)
             assert(action.isLegal(game))
             action.invoke(game)
 
         }
     }
-    CommitAction(red).invoke(game)
-    CommitAction(blue).invoke(game)
-    MoveAction(red, 1, 4, 1, 5).invoke(game)
+    CommitAction().invoke(game)
+    CommitAction().invoke(game)
+    MoveAction(1, 4, 1, 5).withUser(red).invoke(game)
     println(serializer.writeValueAsString(game.mask(red)))
 
     val json = Serializer.serializer.writeValueAsString(game)
@@ -109,8 +104,691 @@ class StrategoGameTest extends FunSuite {
   }
 
   test("deser") {
-    val json = """ { "type" : "Stratego" , "redPlayer" : { "username" : "player1" , "admin" : false , "_id" : { "$oid" : "53626176b968a30c01c636ff"} , "simple" : true , "wonGames" : [ ] , "lostGames" : [ ] , "drawnGames" : [ ] , "playedGames" : [ ] , "stats" : { "won" : 0 , "lost" : 0 , "drawn" : 0 , "played" : 0}} , "bluePlayerReady" : false , "redPlayerReady" : false , "actionList" : [ ] , "state" : "PENDING" , "creator" : { "username" : "player1" , "admin" : false , "_id" : { "$oid" : "53626176b968a30c01c636ff"} , "simple" : true , "wonGames" : [ ] , "lostGames" : [ ] , "drawnGames" : [ ] , "playedGames" : [ ] , "stats" : { "won" : 0 , "lost" : 0 , "drawn" : 0 , "played" : 0}} , "timeouts" : { "player1" : 1398956470181} , "players" : [ { "username" : "player1" , "admin" : false , "_id" : { "$oid" : "53626176b968a30c01c636ff"} , "simple" : true , "wonGames" : [ ] , "lostGames" : [ ] , "drawnGames" : [ ] , "playedGames" : [ ] , "stats" : { "won" : 0 , "lost" : 0 , "drawn" : 0 , "played" : 0}}] , "gameOver" : false , "timeoutMap" : { } , "_id" : { "$oid" : "5362617ab968a30c01c63701"} , "phase" : "PLACE_PIECES"}
-                 |"""
+    val json = """{
+                 |    "type": "Stratego",
+                 |    "redPlayer": {
+                 |        "username": "local1",
+                 |        "admin": false,
+                 |        "_id": {
+                 |            "$oid": "536874f9b968ce471508a318"
+                 |        },
+                 |        "simple": true,
+                 |        "wonGames": [],
+                 |        "lostGames": [],
+                 |        "drawnGames": [],
+                 |        "playedGames": []
+                 |    },
+                 |    "bluePlayer": {
+                 |        "username": "local2",
+                 |        "admin": false,
+                 |        "_id": {
+                 |            "$oid": "5368751db968ce471508a31a"
+                 |        },
+                 |        "simple": true,
+                 |        "wonGames": [],
+                 |        "lostGames": [],
+                 |        "drawnGames": [],
+                 |        "playedGames": []
+                 |    },
+                 |    "currentPlayer": {
+                 |        "username": "local1",
+                 |        "admin": false,
+                 |        "_id": {
+                 |            "$oid": "536874f9b968ce471508a318"
+                 |        },
+                 |        "simple": true,
+                 |        "wonGames": [],
+                 |        "lostGames": [],
+                 |        "drawnGames": [],
+                 |        "playedGames": []
+                 |    },
+                 |    "bluePlayerReady": false,
+                 |    "redPlayerReady": false,
+                 |    "state": "RUNNING",
+                 |    "creator": {
+                 |        "username": "local1",
+                 |        "admin": false,
+                 |        "_id": {
+                 |            "$oid": "536874f9b968ce471508a318"
+                 |        },
+                 |        "simple": true,
+                 |        "wonGames": [],
+                 |        "lostGames": [],
+                 |        "drawnGames": [],
+                 |        "playedGames": []
+                 |    },
+                 |    "actionList": [{
+                 |        "x": 1,
+                 |        "y": 1,
+                 |        "piece": {
+                 |            "type": "RedPiece",
+                 |            "value": 1
+                 |        },
+                 |        "actionId": 1,
+                 |        "user": {
+                 |            "username": "local1",
+                 |            "admin": false,
+                 |            "_id": {
+                 |                "$oid": "536874f9b968ce471508a318"
+                 |            },
+                 |            "simple": true,
+                 |            "wonGames": [],
+                 |            "lostGames": [],
+                 |            "drawnGames": [],
+                 |            "playedGames": []
+                 |        }
+                 |    }],
+                 |    "timeouts": {
+                 |        "local1": 1399354684535
+                 |    },
+                 |    "players": [{
+                 |        "username": "local1",
+                 |        "admin": false,
+                 |        "_id": {
+                 |            "$oid": "536874f9b968ce471508a318"
+                 |        },
+                 |        "simple": true,
+                 |        "wonGames": [],
+                 |        "lostGames": [],
+                 |        "drawnGames": [],
+                 |        "playedGames": []
+                 |    }, {
+                 |        "username": "local2",
+                 |        "admin": false,
+                 |        "_id": {
+                 |            "$oid": "5368751db968ce471508a31a"
+                 |        },
+                 |        "password": "$2a$10$AlyaX3boONXrddMStknKP.UhbDSfl7fKJUxpSLXD.w8sI4StwQ3nS",
+                 |        "currentGameId": {
+                 |            "$oid": "53687500b968ce471508a319"
+                 |        },
+                 |        "simple": false,
+                 |        "wonGames": [],
+                 |        "lostGames": [],
+                 |        "drawnGames": [],
+                 |        "playedGames": [],
+                 |        "stats": {
+                 |            "won": 0,
+                 |            "lost": 0,
+                 |            "drawn": 0,
+                 |            "played": 0
+                 |        }
+                 |    }],
+                 |    "gameOver": false,
+                 |    "board": [
+                 |        [{
+                 |            "type": "Boundary"
+                 |        }, {
+                 |            "type": "Boundary"
+                 |        }, {
+                 |            "type": "Boundary"
+                 |        }, {
+                 |            "type": "Boundary"
+                 |        }, {
+                 |            "type": "Boundary"
+                 |        }, {
+                 |            "type": "Boundary"
+                 |        }, {
+                 |            "type": "Boundary"
+                 |        }, {
+                 |            "type": "Boundary"
+                 |        }, {
+                 |            "type": "Boundary"
+                 |        }, {
+                 |            "type": "Boundary"
+                 |        }, {
+                 |            "type": "Boundary"
+                 |        }, {
+                 |            "type": "Boundary"
+                 |        }],
+                 |        [{
+                 |            "type": "Boundary"
+                 |        }, {
+                 |            "type": "RedPiece",
+                 |            "value": 1
+                 |        }, {
+                 |            "type": "Empty"
+                 |        }, {
+                 |            "type": "Empty"
+                 |        }, {
+                 |            "type": "Empty"
+                 |        }, {
+                 |            "type": "Empty"
+                 |        }, {
+                 |            "type": "Empty"
+                 |        }, {
+                 |            "type": "Empty"
+                 |        }, {
+                 |            "type": "Empty"
+                 |        }, {
+                 |            "type": "Empty"
+                 |        }, {
+                 |            "type": "Empty"
+                 |        }, {
+                 |            "type": "Boundary"
+                 |        }],
+                 |        [{
+                 |            "type": "Boundary"
+                 |        }, {
+                 |            "type": "Empty"
+                 |        }, {
+                 |            "type": "Empty"
+                 |        }, {
+                 |            "type": "Empty"
+                 |        }, {
+                 |            "type": "Empty"
+                 |        }, {
+                 |            "type": "Empty"
+                 |        }, {
+                 |            "type": "Empty"
+                 |        }, {
+                 |            "type": "Empty"
+                 |        }, {
+                 |            "type": "Empty"
+                 |        }, {
+                 |            "type": "Empty"
+                 |        }, {
+                 |            "type": "Empty"
+                 |        }, {
+                 |            "type": "Boundary"
+                 |        }],
+                 |        [{
+                 |            "type": "Boundary"
+                 |        }, {
+                 |            "type": "Empty"
+                 |        }, {
+                 |            "type": "Empty"
+                 |        }, {
+                 |            "type": "Empty"
+                 |        }, {
+                 |            "type": "Empty"
+                 |        }, {
+                 |            "type": "Boundary"
+                 |        }, {
+                 |            "type": "Boundary"
+                 |        }, {
+                 |            "type": "Empty"
+                 |        }, {
+                 |            "type": "Empty"
+                 |        }, {
+                 |            "type": "Empty"
+                 |        }, {
+                 |            "type": "Empty"
+                 |        }, {
+                 |            "type": "Boundary"
+                 |        }],
+                 |        [{
+                 |            "type": "Boundary"
+                 |        }, {
+                 |            "type": "Empty"
+                 |        }, {
+                 |            "type": "Empty"
+                 |        }, {
+                 |            "type": "Empty"
+                 |        }, {
+                 |            "type": "Empty"
+                 |        }, {
+                 |            "type": "Boundary"
+                 |        }, {
+                 |            "type": "Boundary"
+                 |        }, {
+                 |            "type": "Empty"
+                 |        }, {
+                 |            "type": "Empty"
+                 |        }, {
+                 |            "type": "Empty"
+                 |        }, {
+                 |            "type": "Empty"
+                 |        }, {
+                 |            "type": "Boundary"
+                 |        }],
+                 |        [{
+                 |            "type": "Boundary"
+                 |        }, {
+                 |            "type": "Empty"
+                 |        }, {
+                 |            "type": "Empty"
+                 |        }, {
+                 |            "type": "Empty"
+                 |        }, {
+                 |            "type": "Empty"
+                 |        }, {
+                 |            "type": "Empty"
+                 |        }, {
+                 |            "type": "Empty"
+                 |        }, {
+                 |            "type": "Empty"
+                 |        }, {
+                 |            "type": "Empty"
+                 |        }, {
+                 |            "type": "Empty"
+                 |        }, {
+                 |            "type": "Empty"
+                 |        }, {
+                 |            "type": "Boundary"
+                 |        }],
+                 |        [{
+                 |            "type": "Boundary"
+                 |        }, {
+                 |            "type": "Empty"
+                 |        }, {
+                 |            "type": "Empty"
+                 |        }, {
+                 |            "type": "Empty"
+                 |        }, {
+                 |            "type": "Empty"
+                 |        }, {
+                 |            "type": "Empty"
+                 |        }, {
+                 |            "type": "Empty"
+                 |        }, {
+                 |            "type": "Empty"
+                 |        }, {
+                 |            "type": "Empty"
+                 |        }, {
+                 |            "type": "Empty"
+                 |        }, {
+                 |            "type": "Empty"
+                 |        }, {
+                 |            "type": "Boundary"
+                 |        }],
+                 |        [{
+                 |            "type": "Boundary"
+                 |        }, {
+                 |            "type": "Empty"
+                 |        }, {
+                 |            "type": "Empty"
+                 |        }, {
+                 |            "type": "Empty"
+                 |        }, {
+                 |            "type": "Empty"
+                 |        }, {
+                 |            "type": "Boundary"
+                 |        }, {
+                 |            "type": "Boundary"
+                 |        }, {
+                 |            "type": "Empty"
+                 |        }, {
+                 |            "type": "Empty"
+                 |        }, {
+                 |            "type": "Empty"
+                 |        }, {
+                 |            "type": "Empty"
+                 |        }, {
+                 |            "type": "Boundary"
+                 |        }],
+                 |        [{
+                 |            "type": "Boundary"
+                 |        }, {
+                 |            "type": "Empty"
+                 |        }, {
+                 |            "type": "Empty"
+                 |        }, {
+                 |            "type": "Empty"
+                 |        }, {
+                 |            "type": "Empty"
+                 |        }, {
+                 |            "type": "Boundary"
+                 |        }, {
+                 |            "type": "Boundary"
+                 |        }, {
+                 |            "type": "Empty"
+                 |        }, {
+                 |            "type": "Empty"
+                 |        }, {
+                 |            "type": "Empty"
+                 |        }, {
+                 |            "type": "Empty"
+                 |        }, {
+                 |            "type": "Boundary"
+                 |        }],
+                 |        [{
+                 |            "type": "Boundary"
+                 |        }, {
+                 |            "type": "Empty"
+                 |        }, {
+                 |            "type": "Empty"
+                 |        }, {
+                 |            "type": "Empty"
+                 |        }, {
+                 |            "type": "Empty"
+                 |        }, {
+                 |            "type": "Empty"
+                 |        }, {
+                 |            "type": "Empty"
+                 |        }, {
+                 |            "type": "Empty"
+                 |        }, {
+                 |            "type": "Empty"
+                 |        }, {
+                 |            "type": "Empty"
+                 |        }, {
+                 |            "type": "Empty"
+                 |        }, {
+                 |            "type": "Boundary"
+                 |        }],
+                 |        [{
+                 |            "type": "Boundary"
+                 |        }, {
+                 |            "type": "Empty"
+                 |        }, {
+                 |            "type": "Empty"
+                 |        }, {
+                 |            "type": "Empty"
+                 |        }, {
+                 |            "type": "Empty"
+                 |        }, {
+                 |            "type": "Empty"
+                 |        }, {
+                 |            "type": "Empty"
+                 |        }, {
+                 |            "type": "Empty"
+                 |        }, {
+                 |            "type": "Empty"
+                 |        }, {
+                 |            "type": "Empty"
+                 |        }, {
+                 |            "type": "Empty"
+                 |        }, {
+                 |            "type": "Boundary"
+                 |        }],
+                 |        [{
+                 |            "type": "Boundary"
+                 |        }, {
+                 |            "type": "Boundary"
+                 |        }, {
+                 |            "type": "Boundary"
+                 |        }, {
+                 |            "type": "Boundary"
+                 |        }, {
+                 |            "type": "Boundary"
+                 |        }, {
+                 |            "type": "Boundary"
+                 |        }, {
+                 |            "type": "Boundary"
+                 |        }, {
+                 |            "type": "Boundary"
+                 |        }, {
+                 |            "type": "Boundary"
+                 |        }, {
+                 |            "type": "Boundary"
+                 |        }, {
+                 |            "type": "Boundary"
+                 |        }, {
+                 |            "type": "Boundary"
+                 |        }]
+                 |    ],
+                 |    "blueSideboard": [
+                 |        [{
+                 |            "type": "BluePiece",
+                 |            "value": 1
+                 |        }],
+                 |        [{
+                 |            "type": "BluePiece",
+                 |            "value": 2
+                 |        }, {
+                 |            "type": "BluePiece",
+                 |            "value": 2
+                 |        }, {
+                 |            "type": "BluePiece",
+                 |            "value": 2
+                 |        }, {
+                 |            "type": "BluePiece",
+                 |            "value": 2
+                 |        }, {
+                 |            "type": "BluePiece",
+                 |            "value": 2
+                 |        }, {
+                 |            "type": "BluePiece",
+                 |            "value": 2
+                 |        }, {
+                 |            "type": "BluePiece",
+                 |            "value": 2
+                 |        }, {
+                 |            "type": "BluePiece",
+                 |            "value": 2
+                 |        }],
+                 |        [{
+                 |            "type": "BluePiece",
+                 |            "value": 3
+                 |        }, {
+                 |            "type": "BluePiece",
+                 |            "value": 3
+                 |        }, {
+                 |            "type": "BluePiece",
+                 |            "value": 3
+                 |        }, {
+                 |            "type": "BluePiece",
+                 |            "value": 3
+                 |        }, {
+                 |            "type": "BluePiece",
+                 |            "value": 3
+                 |        }],
+                 |        [{
+                 |            "type": "BluePiece",
+                 |            "value": 4
+                 |        }, {
+                 |            "type": "BluePiece",
+                 |            "value": 4
+                 |        }, {
+                 |            "type": "BluePiece",
+                 |            "value": 4
+                 |        }, {
+                 |            "type": "BluePiece",
+                 |            "value": 4
+                 |        }],
+                 |        [{
+                 |            "type": "BluePiece",
+                 |            "value": 5
+                 |        }, {
+                 |            "type": "BluePiece",
+                 |            "value": 5
+                 |        }, {
+                 |            "type": "BluePiece",
+                 |            "value": 5
+                 |        }, {
+                 |            "type": "BluePiece",
+                 |            "value": 5
+                 |        }],
+                 |        [{
+                 |            "type": "BluePiece",
+                 |            "value": 6
+                 |        }, {
+                 |            "type": "BluePiece",
+                 |            "value": 6
+                 |        }, {
+                 |            "type": "BluePiece",
+                 |            "value": 6
+                 |        }, {
+                 |            "type": "BluePiece",
+                 |            "value": 6
+                 |        }],
+                 |        [{
+                 |            "type": "BluePiece",
+                 |            "value": 7
+                 |        }, {
+                 |            "type": "BluePiece",
+                 |            "value": 7
+                 |        }, {
+                 |            "type": "BluePiece",
+                 |            "value": 7
+                 |        }],
+                 |        [{
+                 |            "type": "BluePiece",
+                 |            "value": 8
+                 |        }, {
+                 |            "type": "BluePiece",
+                 |            "value": 8
+                 |        }],
+                 |        [{
+                 |            "type": "BluePiece",
+                 |            "value": 9
+                 |        }],
+                 |        [{
+                 |            "type": "BluePiece",
+                 |            "value": 10
+                 |        }],
+                 |        [{
+                 |            "type": "BluePiece",
+                 |            "value": 11
+                 |        }, {
+                 |            "type": "BluePiece",
+                 |            "value": 11
+                 |        }, {
+                 |            "type": "BluePiece",
+                 |            "value": 11
+                 |        }, {
+                 |            "type": "BluePiece",
+                 |            "value": 11
+                 |        }, {
+                 |            "type": "BluePiece",
+                 |            "value": 11
+                 |        }, {
+                 |            "type": "BluePiece",
+                 |            "value": 11
+                 |        }],
+                 |        [{
+                 |            "type": "BluePiece",
+                 |            "value": 12
+                 |        }]
+                 |    ],
+                 |    "redSideboard": [
+                 |        [],
+                 |        [{
+                 |            "type": "RedPiece",
+                 |            "value": 2
+                 |        }, {
+                 |            "type": "RedPiece",
+                 |            "value": 2
+                 |        }, {
+                 |            "type": "RedPiece",
+                 |            "value": 2
+                 |        }, {
+                 |            "type": "RedPiece",
+                 |            "value": 2
+                 |        }, {
+                 |            "type": "RedPiece",
+                 |            "value": 2
+                 |        }, {
+                 |            "type": "RedPiece",
+                 |            "value": 2
+                 |        }, {
+                 |            "type": "RedPiece",
+                 |            "value": 2
+                 |        }, {
+                 |            "type": "RedPiece",
+                 |            "value": 2
+                 |        }],
+                 |        [{
+                 |            "type": "RedPiece",
+                 |            "value": 3
+                 |        }, {
+                 |            "type": "RedPiece",
+                 |            "value": 3
+                 |        }, {
+                 |            "type": "RedPiece",
+                 |            "value": 3
+                 |        }, {
+                 |            "type": "RedPiece",
+                 |            "value": 3
+                 |        }, {
+                 |            "type": "RedPiece",
+                 |            "value": 3
+                 |        }],
+                 |        [{
+                 |            "type": "RedPiece",
+                 |            "value": 4
+                 |        }, {
+                 |            "type": "RedPiece",
+                 |            "value": 4
+                 |        }, {
+                 |            "type": "RedPiece",
+                 |            "value": 4
+                 |        }, {
+                 |            "type": "RedPiece",
+                 |            "value": 4
+                 |        }],
+                 |        [{
+                 |            "type": "RedPiece",
+                 |            "value": 5
+                 |        }, {
+                 |            "type": "RedPiece",
+                 |            "value": 5
+                 |        }, {
+                 |            "type": "RedPiece",
+                 |            "value": 5
+                 |        }, {
+                 |            "type": "RedPiece",
+                 |            "value": 5
+                 |        }],
+                 |        [{
+                 |            "type": "RedPiece",
+                 |            "value": 6
+                 |        }, {
+                 |            "type": "RedPiece",
+                 |            "value": 6
+                 |        }, {
+                 |            "type": "RedPiece",
+                 |            "value": 6
+                 |        }, {
+                 |            "type": "RedPiece",
+                 |            "value": 6
+                 |        }],
+                 |        [{
+                 |            "type": "RedPiece",
+                 |            "value": 7
+                 |        }, {
+                 |            "type": "RedPiece",
+                 |            "value": 7
+                 |        }, {
+                 |            "type": "RedPiece",
+                 |            "value": 7
+                 |        }],
+                 |        [{
+                 |            "type": "RedPiece",
+                 |            "value": 8
+                 |        }, {
+                 |            "type": "RedPiece",
+                 |            "value": 8
+                 |        }],
+                 |        [{
+                 |            "type": "RedPiece",
+                 |            "value": 9
+                 |        }],
+                 |        [{
+                 |            "type": "RedPiece",
+                 |            "value": 10
+                 |        }],
+                 |        [{
+                 |            "type": "RedPiece",
+                 |            "value": 11
+                 |        }, {
+                 |            "type": "RedPiece",
+                 |            "value": 11
+                 |        }, {
+                 |            "type": "RedPiece",
+                 |            "value": 11
+                 |        }, {
+                 |            "type": "RedPiece",
+                 |            "value": 11
+                 |        }, {
+                 |            "type": "RedPiece",
+                 |            "value": 11
+                 |        }, {
+                 |            "type": "RedPiece",
+                 |            "value": 11
+                 |        }],
+                 |        [{
+                 |            "type": "RedPiece",
+                 |            "value": 12
+                 |        }]
+                 |    ],
+                 |    "_id": {
+                 |        "$oid": "53687500b968ce471508a319"
+                 |    },
+                 |    "phase": "PLACE_PIECES"
+                 |}]
+                 |""".stripMargin
     val game = Serializer.serializer.readValue(json, classOf[Game])
     assert(true)
   }

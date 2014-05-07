@@ -1,5 +1,5 @@
 <!-- Shown if not logged in -->
-<div ng-show="!loggedIn" class="jumbotron">
+<div ng-if="!loggedIn" class="jumbotron">
     <h1>Welcome to Play-Stratego</h1>
     <p class="lead">Welcome! This is a web application written in Scala on the backend and Coffescript on the frontend to allow you to play the game Stratego. Please sign up to play!</p>
     <p>
@@ -10,8 +10,12 @@
     </p>
 </div>
 
-<ng-include src="templateUrls.currentGame">
-</ng-include>
+ <div ng-if="loggedIn && currentGameId">
+    <ng-include src="templateUrls.currentGame">
+    </ng-include>
+</div>
 
-<ng-include src="templateUrls.gamesList">
-</ng-include>
+ <div ng-if="loggedIn && null == currentGameId">
+    <ng-include src="templateUrls.gamesList">
+    </ng-include>
+</div>

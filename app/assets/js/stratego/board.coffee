@@ -34,7 +34,7 @@ angular.module('app.stratego.board', ['app.stratego.square',
                 opacity: 0.3
             }
             @text = new Kinetic.Text {
-                x: 100
+                x: 50
                 y: 250
                 text: @_createText()
                 fontFamily: 'Calibri'
@@ -46,7 +46,7 @@ angular.module('app.stratego.board', ['app.stratego.square',
             layer.add(@text)
             @interval = null
         _createText: ->
-            "Loading" + Array(@ticks).join('.')
+            "Waiting for player" + Array(@ticks).join('.')
         _interval: =>
             @text.text(@_createText())
             @text.getLayer().draw()

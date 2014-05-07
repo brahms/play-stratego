@@ -13,9 +13,11 @@ import org.jongo.Jongo
 class MongoUserRepository @Inject() (jongo: Jongo) extends AbstractMongoRepository(jongo) with UserRepository {
   val USERS = "users"
   val users = jongo.getCollection(USERS)
+  users.ensureIndex( "{ username: 1 }", "{ unique: true, dropDups: true}" )
 
 
   override def get(user: User): User = {
+    logger.debug("get: " + user.getUsername)
     findByUsername(user.username).get
   }
 
@@ -34,7 +36,7 @@ class MongoUserRepository @Inject() (jongo: Jongo) extends AbstractMongoReposito
     entites.map {
       e =>
         logger.debug("Saving: {}", e)
-        users.save(e)
+        save(e)
         logger.debug("Saved: {}", e)
         e
     }.toSeq
@@ -66,23 +68,26 @@ class MongoUserRepository @Inject() (jongo: Jongo) extends AbstractMongoReposito
     users.count()
   }
 
-  override def findAll(ids: Iterable[String]): Seq[User] = {
-    users.find().as(classOf[User]).asScala.toSeq
+  override def findAll(usernames: Iterable[String]): Seq[User] = {
+    users.find("{username: {$in : #} }", usernames).as(classOf[User]).asScala.toSeq
   }
 
   override def exists(username: String): Boolean = {
     users.count("{username: #}", username) == 1
   }
 
+
   override def save[S <: User](entity: S): S = {
     logger.debug("Saving {}", entity.toJson)
+    if (entity.id == null) entity.id = new ObjectId().toString
+    assert(entity.username != null)
     users.save(entity)
     logger.debug("Saved")
     entity
   }
 
   override def updateUserStats(stats: GameStats): Unit = {
-    val users = findAll(stats.players.map(_.getId.toString))
+    val users = findAll(stats.players.map(_.getUsername))
     logger.debug(s"Updating User Stats users: $users with stats $stats")
     users.foreach {
       user =>

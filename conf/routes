@@ -28,13 +28,13 @@ GET     /api/games/:id/actions      @controllers.api.GameController.getGameActio
 POST    /api/games/:id/action       @controllers.api.GameController.invokeAction(id)
 POST    /api/games/:id/join         @controllers.api.GameController.join(id)
 POST    /api/games/create           @controllers.api.GameController.createGame
+POST    /api/games/cancel           @controllers.api.GameController.cancelCurrentGame
 
-GET     /api/games/1234             @controllers.api.GameController.getTestGameState()
-GET     /api/games/1234/actions     @controllers.api.GameController.getTestGameActions()
-
-#Admin
-GET /api/debug/games/:id             @controllers.api.DebugController.getGame(id)
+#Debug
+GET /api/debug/games/:id            @controllers.api.DebugController.getGame(id)
 GET /api/debug/games                @controllers.api.DebugController.getGames()
+GET /api/debug/users                @controllers.api.DebugController.getUsers()
+GET /api/debug/reset                @controllers.api.DebugController.reset
 
 #Test
 GET     /test                       controllers.TestController.test

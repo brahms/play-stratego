@@ -22,9 +22,9 @@ object Global extends WithFilters(HerokuRequireSSLFilter, CSRFFilter(), LoggingF
     context.refresh()
     context.start()
 
-    val repo = context.getBean(classOf[UserRepository])
-    logger.debug("Searching for initial cbrahms user")
-
+//    val repo = context.getBean(classOf[UserRepository])
+//    logger.debug("Searching for initial cbrahms user")
+//
 //    repo.deleteAll()
 //    val user = new User
 //    user.setAdmin(true)

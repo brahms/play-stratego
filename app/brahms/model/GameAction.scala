@@ -2,15 +2,26 @@ package brahms.model
 
 import scala.beans.BeanProperty
 
-trait GameAction[T <: Game] {
+trait GameAction {
   @BeanProperty
   var actionId: Int = _
 
-  def isLegal(game: T) : Boolean
-  def invoke(game: T) : Unit
+  @BeanProperty
+  var user: User = _
 
-  def withActionId[C <: GameAction[T]](id: Int): C = {
+  def isLegal(game: Game) : Boolean
+  def invoke(game: Game) : Unit
+
+  def withActionId(id: Int): GameAction = {
     setActionId(id)
-    this.asInstanceOf[C]
+    this
+  }
+  def withUser(user: User): GameAction = {
+    setUser(user)
+    this
+  }
+
+  def mask(user: User): GameAction = {
+    this
   }
 }

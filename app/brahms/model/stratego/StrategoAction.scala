@@ -2,32 +2,29 @@ package brahms.model.stratego
 
 import com.fasterxml.jackson.annotation.{JsonTypeInfo, JsonSubTypes}
 import scala.beans.BeanProperty
-import brahms.model.{GameAction, User}
+import brahms.model.{Game, GameAction, User}
 import com.fasterxml.jackson.annotation.JsonSubTypes.Type
 import brahms.model.stratego.StrategoTypes.StrategoPiece
 import brahms.util.WithLogging
 
 @JsonTypeInfo(use=JsonTypeInfo.Id.NAME, include=JsonTypeInfo.As.PROPERTY, property="type")
-@JsonSubTypes(Array(new Type(classOf[StrategoActions.AttackAction]),
+@JsonSubTypes(Array(
   new Type(value=classOf[StrategoActions.MoveAction], name="MoveAction"),
   new Type(value=classOf[StrategoActions.PlacePieceAction], name="PlacePieceAction"),
   new Type(value=classOf[StrategoActions.AttackAction], name="AttackAction"),
   new Type(value=classOf[StrategoActions.ReplacePieceAction], name="ReplacePieceAction"),
   new Type(value=classOf[StrategoActions.CommitAction], name="CommitAction")))
-abstract class StrategoAction() extends GameAction[StrategoGame] with WithLogging {
-  override def isLegal(game: StrategoGame): Boolean
-  override def invoke(game: StrategoGame) : Unit = {
-    game.actionList += this
-    setActionId(game.actionList.size)
+abstract class StrategoAction extends GameAction with WithLogging {
+  override def isLegal(game: Game): Boolean
+  override def invoke(game: Game) : Unit = {
+    game match {
+      case game: StrategoGame =>
+        game.actionList += this
+        setActionId(game.actionList.size)
+      case _ =>
+        throw new IllegalArgumentException("Invalid game passed into invoke")
+    }
   }
-
-  /**
-   * Masks a action to be serialized to a specific user, usually this
-   * means turning any values to the value UNKNOWN when serialized to the other player
-   * @param user
-   * @return
-   */
-  def mask(user: User) : StrategoAction = this
 
 
   protected def outOfBounds(x: Int, y:Int): Boolean = {

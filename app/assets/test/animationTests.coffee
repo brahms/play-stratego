@@ -4,7 +4,7 @@ QUnit.config.testTimeout = 10 * 1000
 window.ASSETS = "/assets/"
 window.USER = {
     username: 'cbrahms'
-    id: 'bla'
+    _id: 'bla'
 }
 
 angular.injector(['ng', 'app.stratego']).invoke([

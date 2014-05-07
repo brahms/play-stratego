@@ -1,3 +1,6 @@
-<div class="current-game" ng-controller="CurrentGameCtrl">
-<div class="canvas" id="canvas"></div>
+
+<div class="current-game" style="width: 450px" ng-controller="CurrentGameCtrl">
+    <div class="canvas" id="canvas"></div>
+    <button ng-show="showCommit" disabled="{{scope.disableCommit}}" type="button" class="btn btn-success btn-block" ng-click="commit()">Commit</button>
+    <button ng-show="showCancel" type="button" class="btn btn-warning btn-block" ng-click="cancel()">Cancel</button>
 </div>
