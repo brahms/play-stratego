@@ -38,6 +38,8 @@ angular.module('app.stratego.controller', ['app.stratego.actions', 'app.stratego
                 log.debug("Created action: #{action}")
                 @actionQueue.push(action)
 
+            @_invokeAnyAction()
+
         _onInit: (game) =>
             log.debug("On init: #{angular.toJson(game)}")
             if (game.state == 'PENDING')
@@ -74,17 +76,14 @@ angular.module('app.stratego.controller', ['app.stratego.actions', 'app.stratego
                             @board.enableDragging()
                             @board.draw()
                             @invoker.startGrabbingActions()
-                            timeout @_invokeAnyAction
+                            @_invokeAnyAction()
 
         _invokeAnyAction: () =>
             if @actionQueue.length > 0
                 action = @actionQueue.shift()
                 log.debug("Invoking action on board: #{action}")
-                action.apply(action).finally () =>
-                    timeout @_invokeAnyAction, 1000
-            else
-                log.debug("No actions to invoke")
-                timeout @_invokeAnyAction, 1000
+                action.apply(@board).finally () =>
+                    timeout @_invokeAnyAction
 
         _onPieceMoved: (piece, pos) =>
             log.debug("#{@} _onPieceMoved: #{piece}")

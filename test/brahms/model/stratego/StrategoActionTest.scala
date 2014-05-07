@@ -67,7 +67,7 @@ class StrategoActionTest extends FunSuite with BeforeAndAfter {
   test("PlacePieceAction") {
     val piece = new BluePiece(MAJOR_7)
 
-    val placePieceAction = PlacePieceAction(1, 10 , piece).withUser(redUser.toSimpleUser).asInstanceOf[ReplacePieceAction]
+    val placePieceAction = PlacePieceAction(1, 10 , piece).withUser(redUser.toSimpleUser).asInstanceOf[PlacePieceAction]
     val json = serializer.writeValueAsString(placePieceAction)
     val actualAction = serializer.readValue(json, classOf[StrategoAction])
     assert(actualAction.isInstanceOf[PlacePieceAction])
@@ -95,7 +95,7 @@ class StrategoActionTest extends FunSuite with BeforeAndAfter {
   }
 
   test("AttackAction") {
-    game.setStrategoState(StrategoState.RUNNING)
+    game.setPhase(StrategoPhase.RUNNING)
     val attackActionToSerialize = AttackAction(1, 1, 1, 2).withUser(redUser.toSimpleUser).asInstanceOf[AttackAction]
     val json = serializer.writeValueAsString(attackActionToSerialize)
     println(json)
@@ -105,7 +105,7 @@ class StrategoActionTest extends FunSuite with BeforeAndAfter {
     game.setPiece(1,2, new BluePiece(SPY_1))
     assert(attackAction.isLegal(game))
     attackAction.invoke(game)
-    assertResult (Empty) ( game.getPiece(1, 1) )
+    assertResult (Empty()) ( game.getPiece(1, 1) )
     assertResult (redPiece) ( game.getPiece(1,2) )
     attackAction.setActionId(1)
     val jsonToClient = serializer.writeValueAsString(attackAction)
@@ -122,7 +122,7 @@ class StrategoActionTest extends FunSuite with BeforeAndAfter {
     val redScout = new RedPiece(SCOUT_2)
     game.setPiece(1,1, redCaptain)
     game.setPiece(2,1, redScout)
-    game.setStrategoState(StrategoState.RUNNING)
+    game.setPhase(StrategoPhase.RUNNING)
 
     var captainMove = MoveAction(1, 1, 1, 2).withUser(redUser.toSimpleUser).asInstanceOf[MoveAction]
     var scoutMove = MoveAction(2, 1, 2, 4).withUser(redUser.toSimpleUser).asInstanceOf[MoveAction]
@@ -135,7 +135,7 @@ class StrategoActionTest extends FunSuite with BeforeAndAfter {
     assertResult(2)(captainMove.newY)
     assert(captainMove.isLegal(game))
     captainMove.invoke(game)
-    assertResult(Empty)(game.getPiece(1,1))
+    assertResult(Empty())(game.getPiece(1,1))
     assertResult(redCaptain)(game.getPiece(1,2))
     assertResult(1)(captainMove.getActionId)
     assertResult(1)(game.actionList.size)
@@ -148,7 +148,7 @@ class StrategoActionTest extends FunSuite with BeforeAndAfter {
     assertResult(4)(scoutMove.newY)
     assert(scoutMove.isLegal(game))
     scoutMove.invoke(game)
-    assertResult(Empty)(game.getPiece(2,1))
+    assertResult(Empty())(game.getPiece(2,1))
     assertResult(redScout)(game.getPiece(2,4))
     assertResult(2)(scoutMove.getActionId)
     assertResult(2)(game.actionList.size)
@@ -181,7 +181,7 @@ class StrategoActionTest extends FunSuite with BeforeAndAfter {
 
     assert(game.redPlayerReady)
     assert(game.bluePlayerReady == false)
-    assertResult(game.strategoState)(StrategoState.PLACE_PIECES)
+    assertResult(game.phase)(StrategoPhase.PLACE_PIECES)
 
     // shouldn't be able to double commit
     assert(!commitActionRed.isLegal(game))
@@ -192,7 +192,7 @@ class StrategoActionTest extends FunSuite with BeforeAndAfter {
 
     commitActionBlue.invoke(game)
     assert(game.bluePlayerReady)
-    assertResult(game.strategoState)(StrategoState.RUNNING)
+    assertResult(game.phase)(StrategoPhase.RUNNING)
 
 
   }

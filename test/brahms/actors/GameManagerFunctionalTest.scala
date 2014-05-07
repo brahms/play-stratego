@@ -14,7 +14,7 @@ import scala.concurrent.Await
 import akka.pattern.ask
 import akka.util.Timeout
 import scala.concurrent.ExecutionContext.Implicits.global
-import brahms.model.stratego.{StrategoTypes, StrategoState, StrategoGame}
+import brahms.model.stratego.{StrategoTypes, StrategoPhase, StrategoGame}
 import brahms.actors._
 import brahms.model.stratego.StrategoActions.PlacePieceAction
 import brahms.model.stratego.StrategoTypes.{BluePiece, RedPiece}
@@ -114,7 +114,7 @@ class GameManagerFunctionalTest extends Specification with WithLogging {
         case Failed(reason) => ko("Failed to join game: " + reason)
         case JoinGameSucceeded(game: StrategoGame) =>
           gameId = game.id
-          (game.state should beEqualTo(GameState.RUNNING)) and (game.getStrategoState should beEqualTo(StrategoState.PLACE_PIECES))
+          (game.state should beEqualTo(GameState.RUNNING)) and (game.phase should beEqualTo(StrategoPhase.PLACE_PIECES))
         case _ => ko
       }
       Await.result(result, timeoutDuration)
@@ -134,7 +134,7 @@ class GameManagerFunctionalTest extends Specification with WithLogging {
       game.get.currentPlayer should beEqualTo(PLAYER1)
       game.get.bluePlayer should beEqualTo(PLAYER2)
       game.get.state should beEqualTo(GameState.RUNNING)
-      game.get.strategoState should beEqualTo(StrategoState.PLACE_PIECES)
+      game.get.phase should beEqualTo(StrategoPhase.PLACE_PIECES)
     }
     "Player 1 should be able to place a piece" in {
       val json = serializer.writeValueAsString(PlacePieceAction(1, 1, new RedPiece(StrategoTypes.SCOUT_2)).withUser(PLAYER1))

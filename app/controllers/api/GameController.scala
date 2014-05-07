@@ -79,7 +79,7 @@ class GameController extends AbstractController with InitializingBean {
   /**
    * Retrieves the the action list for a game where each action is greater than the given id
    * The intended usage of this call is to poll for updates to a game
-   * @param id The last action id the caller has seen
+   * @param id The last action id the caller has en
    * @return
    */
   def getGameActions(id: String) = Authenticated.async {

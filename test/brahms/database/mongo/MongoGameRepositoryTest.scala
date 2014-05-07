@@ -54,7 +54,7 @@ class MongoGameRepositoryTest extends FunSuite with BeforeAndAfter {
   test ("Find a game") {
     val retrieved = gameRepo.findOne(game.id).get.asInstanceOf[StrategoGame]
     assertResult(redPlayer)(retrieved.redPlayer)
-    assertResult(game.strategoState)(retrieved.strategoState)
+    assertResult(game.phase)(retrieved.phase)
   }
 
   test ("Update a game") {
@@ -67,7 +67,7 @@ class MongoGameRepositoryTest extends FunSuite with BeforeAndAfter {
 
     val retrieved = gameRepo.findOne(game.id).get.asInstanceOf[StrategoGame]
     assertResult(redPlayer)(retrieved.redPlayer)
-    assertResult(game.strategoState)(retrieved.strategoState)
+    assertResult(game.phase)(retrieved.phase)
     assert(retrieved.actionList.isEmpty==false)
     assertResult(classOf[PlacePieceAction])(retrieved.actionList(0).getClass)
     assertResult(1)(retrieved.actionList(0).getActionId)

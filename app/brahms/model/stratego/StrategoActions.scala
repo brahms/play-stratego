@@ -23,7 +23,7 @@ object StrategoActions {
         case game: StrategoGame =>
           if (outOfBounds(x, y)) return false
           if (outOfBounds(newX, newY)) return false;
-          if (game.strategoState != StrategoState.RUNNING) return false;
+          if (game.phase != StrategoPhase.RUNNING) return false;
           val moveType = game.board(newX)(newY)
           game.board(x)(y) match {
             case piece: StrategoPiece if game.sameUser(user, piece) && moveType == Empty() =>
@@ -103,7 +103,7 @@ object StrategoActions {
 
           if (outOfBounds(x, y)) return false
           if (outOfBounds(newX, newY)) return false;
-          if (game.strategoState != StrategoState.RUNNING) return false;
+          if (game.phase != StrategoPhase.RUNNING) return false;
 
           val defender = game.board(newX)(newY)
           val attacker = game.board(x)(y)
@@ -179,7 +179,7 @@ object StrategoActions {
         case game: StrategoGame =>
 
           if (outOfBounds(x, y)) return false
-          if (game.strategoState != StrategoState.PLACE_PIECES) return false;
+          if (game.phase != StrategoPhase.PLACE_PIECES) return false;
           if (!game.sameUser(user, piece)) return false;
           if (Empty() != game.board(x)(y)) return false;
           if (!piece.isValid) return false
@@ -246,7 +246,7 @@ object StrategoActions {
 
           if (outOfBounds(x, y)) return false
           if (outOfBounds(newX, newY)) return false
-          if (game.strategoState != StrategoState.PLACE_PIECES) return false;
+          if (game.phase != StrategoPhase.PLACE_PIECES) return false;
           game.board(x)(y) match {
             case piece: StrategoPiece =>
               if (!game.sameUser(user, piece))
@@ -280,8 +280,8 @@ object StrategoActions {
       game match {
         case game: StrategoGame =>
 
-          if (game.strategoState != StrategoState.PLACE_PIECES) {
-            logger.debug("Failing on clause 1, game phase is: {}", game.strategoState)
+          if (game.phase != StrategoPhase.PLACE_PIECES) {
+            logger.debug("Failing on clause 1, game phase is: {}", game.phase)
             return false
           }
           if (game.bluePlayer.equals(user) && (game.bluePlayerReady || !game.blueSideboard.forall(_.isEmpty))) {
@@ -313,7 +313,7 @@ object StrategoActions {
           }
 
           if (game.redPlayerReady && game.bluePlayerReady)
-            game.strategoState = StrategoState.RUNNING
+            game.phase = StrategoPhase.RUNNING
           logger.trace(s"$user commits his piece placement")
           super.invoke(game)
       }

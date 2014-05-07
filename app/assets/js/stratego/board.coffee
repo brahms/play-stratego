@@ -135,9 +135,10 @@ angular.module('app.stratego.board', ['app.stratego.square',
         setRunning: ->
             log.debug("#{@} setRunning")
             @state = 'RUNNING'
-            @pendingText.stop()
-            @pendingLayer.destroy()
-            @pendingLayer = null
+            if @pendingLayer
+                @pendingText.stop()
+                @pendingLayer.destroy()
+                @pendingLayer = null
         placePiece: (piece, x, y) ->
             log.debug("#{@} placePiece(#{piece} #{x}, #{y})")
             @matrix[x][y].setPiece(piece)

@@ -25,7 +25,7 @@ class StrategoGameTest extends FunSuite {
 
     board.setPiece(1,1, new BluePiece(1))
     board.setPiece(2,2, new BluePiece(1))
-    board.strategoState = StrategoState.RUNNING
+    board.phase = StrategoPhase.RUNNING
 
     val action =  MoveAction(1,1,1,2).withUser(blue).asInstanceOf[StrategoAction]
     assert(action.isLegal(board))

@@ -92,11 +92,8 @@ class StrategoGame extends Game {
    * The current state of the game, either PLACE_PIECES OR RUNNING
    */
   @BeanProperty
-  @JsonIgnore
-  var strategoState: StrategoState = StrategoState.PLACE_PIECES
+  var phase: StrategoPhase = StrategoPhase.PLACE_PIECES
 
-  @JsonProperty
-  def phase: String = getStrategoState.toString()
 
 
   /**
@@ -475,7 +472,7 @@ class StrategoGame extends Game {
     game.setCurrentPlayer(currentPlayer)
     game.setBoard(maskBoard(user))
     game.actionList = actionList.map(_.mask(user).asInstanceOf[StrategoAction])
-    game.setStrategoState(strategoState)
+    game.setPhase(getPhase)
     game.setState(state)
     game.setId(id)
     game.players = players

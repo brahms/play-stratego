@@ -37,7 +37,7 @@ angular.module('app.stratego.invoker', [])
             http({
                 url: "/api/games/#{@gameId}"
             }).success((data)=>
-                @_updateActionId(data)
+                @_updateActionId(data.actionList)
                 @emit('init', data)
                 $window.setTimeout(@_onInterval, 1 * 1000)
                 defer.resolve()
@@ -53,12 +53,11 @@ angular.module('app.stratego.invoker', [])
         _updateActionId: (data) ->
             log.debug("#{@} updateActionId to : #{data.actionId}")
 
-            if data.actionList?.length > 0
-                @lastActionId = data.actionList[data.actionList.length-1].actionId
+            if data.length > 0
+                @lastActionId = data[data.length-1].actionId
 
             log.debug("#{@} Updated to : #{@lastActionId}")
         _onInterval: =>
-            log.debug("#{@} onInterval, invokerPhase = #{@invokerPhase}")
             if @invokerPhase == 'init'
                 http({
                     url: "/api/games/#{@gameId}"
@@ -89,12 +88,10 @@ angular.module('app.stratego.invoker', [])
                         log.debug("#{@} Got more game state")
                         @_updateActionId(data)
                         @emit('data', data)
-                    else
-                        log.debug("#{@} No new actions")
                 ).error( () =>
                     log.error("#{@} Error getting data in onInterval")
                 ).finally( () =>
-                    $window.setTimeout(@_onInterval, 1 * 5000)
+                    $window.setTimeout(@_onInterval, 2 * 1000)
                 )
 
         toString: ->
