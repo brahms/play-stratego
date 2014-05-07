@@ -47,7 +47,7 @@ angular.module('app.controllers', ['ngRoute', 'app.stratego', 'ui.bootstrap'])
                             type: 'stratego'
                         }
                     }).success( (data) ->
-                        scope.currentGameId = data._id
+                        USER.currentGameId = scope.currentGameId = data._id
                         modal.open {
                             template: """<p>Created game with _id: #{data._id}</p>"""
                             size: 'sm'

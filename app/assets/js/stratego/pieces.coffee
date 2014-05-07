@@ -95,6 +95,7 @@ angular.module('app.stratego.pieces', ['app.stratego.functions'])
             value: @value
             type: 'BluePiece'
         }
+        testColor: (isRed) -> isRed isnt true
     class RedPiece extends StrategoPiece
         constructor: (value) ->
             super('r', value)
@@ -102,6 +103,7 @@ angular.module('app.stratego.pieces', ['app.stratego.functions'])
             value: @value
             type: 'RedPiece'
         }
+        testColor: (isRed) -> isRed isnt false
 
 
     StrategoPiece.SPY = 1

@@ -189,7 +189,10 @@ angular.module('app.stratego.sideboards', ['app.stratego.actions',
                 square.setCountZero()
         getImage: (value) ->
             @squares[value].getImage()
-
+        isEmpty: ->
+            for val, square of @squares
+                if square.count > 0 then return false
+            true
 
     class RedSideboard extends StrategoSideboard
         constructor: (opts) ->

@@ -4,7 +4,7 @@ angular.module('app.stratego.square', ['app.stratego.functions', 'app.stratego.p
     {SQUARE_WIDTH, SQUARE_HEIGHT, squareToXy} = StrategoFunctions
     {StrategoPiece, RedPiece, BluePiece} = StrategoPieces
     class StrategoSquare extends EventEmitter
-        constructor: ({x, y, layer, boardOffset, emitter}) ->
+        constructor: ({x, y, layer, boardOffset, emitter, isRed}) ->
             @x = x
             @y = y
             if !x? then throw "StrategoSquare x null"
@@ -12,6 +12,7 @@ angular.module('app.stratego.square', ['app.stratego.functions', 'app.stratego.p
             if !layer? then throw "StrategoSquare layer null"
             if !boardOffset? then throw "StrategoSquare boardOffset null"
             if !emitter? then throw "StrategoSquare emitter null"
+            if !isRed? then throw "StrategoSquare isRed null"
 
             {x,y} = squareToXy x, y
             @layer = layer
@@ -28,6 +29,7 @@ angular.module('app.stratego.square', ['app.stratego.functions', 'app.stratego.p
             }
             @piece = null
             @draggable = false
+            @isRed = isRed
 
             layer.add @rect
         toString: =>
@@ -51,9 +53,17 @@ angular.module('app.stratego.square', ['app.stratego.functions', 'app.stratego.p
             }
             promise
                 .then ()=>
-                    log.debug("#{@} setting #{piece} to draggable: #{@draggable}")
-                    if @draggable then @piece.draggableOn() else @piece.draggableOff()
-
+                    if @piece.testColor(@isRed)
+                        if @draggable 
+                            log.debug("#{@} setting #{piece} to draggable")
+                            @piece.draggableOn() 
+                        else
+                            log.debug("#{@} setting #{piece} to not drabble")
+                            @piece.draggableOff()
+        isOtherUser: (piece) =>
+            if piece instanceof RedPiece and @hasBluePiece() then return true
+            if piece instanceof BluePiece and @hasRedPiece() then return true
+            false
         hasRedPiece: ->
             if @piece and @piece instanceof RedPiece
                 true
@@ -66,16 +76,18 @@ angular.module('app.stratego.square', ['app.stratego.functions', 'app.stratego.p
                 false
         draggableOn: ->
             @draggable = true
-            if @piece then @piece.draggableOn()
+            if @piece and @piece.testColor(@isRed) then @piece.draggableOn()
         draggableOff: ->
             @draggable = false
-            if @piece.then then @piece.draggableOff()
+            if @piece then @piece.draggableOff()
         hasPiece: ->
             if @piece then true
             else false
         setEmpty: ->
             log.debug("#{@} setEmpty() piece: #{@piece}")
             @piece = null
+        isEmpty: ->
+            not @piece
 
         intersects: (layerX, layerY) ->
             x1 = @rect.x()

@@ -223,12 +223,24 @@ angular.module('app.stratego.board', ['app.stratego.square',
             byX = if (x < newX) then 1 else -1
             byY = if (y < newY) then 1 else -1
             if (x == newX)
-                for checkY in [newY..y] by byY
+                for checkY in [y..newY] by byY
                     if @matrix[x][checkY] == Boundary then return true
             else
-                for checkX in [newX..x] by byX
+                for checkX in [x..newX] by byX
                     if @matrix[checkX][y] == Boundary then return true 
             false
+
+        canEnableCommit: ->
+            log.debug "#{@} canEnableCommit"
+            if not @canShowCommit() then return false
+            if @isRed and @redPlayerReady then return false
+            if not @isRed and @bluePlayerReady then return false
+            if @isRed and not @redSideboard.isEmpty() then return false
+            if not @isRed and not @blueSideboard.isEmpty() then return false
+
+            log.debug "#{@} canEnableCommit returning true"
+            return true
+        canShowCommit: -> @phase is "PLACE_PIECES"
 
         commitOtherPlayer: ->
             log.debug("commitOtherPlayer")
@@ -387,7 +399,7 @@ angular.module('app.stratego.board', ['app.stratego.square',
                     @matrix[newX][newY].setPiece(piece)
                     log.debug('move anim finished')
                     defer.resolve()
-                duration: 2
+                duration: 1.5
             }
             anim.play()
 
@@ -398,9 +410,7 @@ angular.module('app.stratego.board', ['app.stratego.square',
             for x in [1..10]
                 for y in [1..10]
                     square =  @matrix[x][y]
-                    if square instanceof StrategoSquare and @isRed and square.hasRedPiece() 
-                        square.draggableOn()
-                    else if square instanceof StrategoSquare and !@isRed and square.hasBluePiece() 
+                    if square instanceof StrategoSquare
                         square.draggableOn()
         disableDragging: ->
             for x in [1..10]
@@ -486,6 +496,7 @@ angular.module('app.stratego.board', ['app.stratego.square',
                             layer: @squaresLayer
                             boardOffset: @offsetx
                             emitter: @
+                            isRed: @isRed
                         })
 
             return defer.promise

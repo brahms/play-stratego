@@ -13,6 +13,9 @@ angular.module('app.stratego.actions', ['app.stratego.pieces'])
             throw "toJson Not implemented"
         fromJson: (json) ->
             throw "fromJson Not implemented"
+        illegal: (reason) ->
+            log.debug("#{@} illegal move because #{reason}")
+            false
 
     StrategoAction.fromJson = (json) ->
         action = null
@@ -32,12 +35,13 @@ angular.module('app.stratego.actions', ['app.stratego.pieces'])
             @newX = newX
             @newY = newY
         isLegal: (board) ->
-            if board.isOutOfBounds(@newX, @newY) then return false
+            if board.isOutOfBounds(@newX, @newY) then return @illegal("outbOfBounds")
             piece = board.getPiece(@x, @y)
             maxDist = 1
             if (piece.value is StrategoPiece.SCOUT) then maxDist = 10
-            if (board.getDistance(@x, @y, @newX, @newY) > maxDist) then return false
-            if (board.isThroughLakes(@x, @y, @newX, @newY)) then return false
+            if (board.getDistance(@x, @y, @newX, @newY) > maxDist) then return @illegal("dist")
+            if (board.isThroughLakes(@x, @y, @newX, @newY)) then return @illegal("through lakes")
+            true
         apply: (board) ->
             if (board.animationsEnabled)
                 board.animatedMove(@x, @y, @newX, @newY)
@@ -178,8 +182,7 @@ angular.module('app.stratego.actions', ['app.stratego.pieces'])
 
 
     class CommitAction extends StrategoAction
-        constructor: ({user})->
-            @user = user
+        constructor: ->
         isLegal: (board) ->
             board.phase == "PHASE_PIECES"
         apply: (board) ->
@@ -189,9 +192,7 @@ angular.module('app.stratego.actions', ['app.stratego.pieces'])
             d = Q.defer(); d.resolve()
 
             d.promise
-        toJson: (json) -> {
-            user: @user
-        }
+        toJson: (json) -> {"type":"CommitAction"}
         fromJson: (json) ->
             @user = json.user
 

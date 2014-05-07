@@ -219,13 +219,13 @@ object StrategoActions {
           if (!piece.isValid) return false
           piece match {
             case piece: BluePiece =>
-              if (game.isOnRedSide(x, y))
+              if (!game.isOnBlueSide(x, y))
                 return false
               if (!game.stillInSideboard(piece))
                 return false
               true
             case piece: RedPiece =>
-              if (game.isOnBlueSide(x, y))
+              if (!game.isOnRedSide(x, y))
                 return false
               if (!game.stillInSideboard(piece))
                 return false
