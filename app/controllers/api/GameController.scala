@@ -191,7 +191,7 @@ class GameController extends AbstractController with InitializingBean {
               "winners" -> game.getGameStatistics.winners.map(_.username),
               "losers" -> game.getGameStatistics.losers.map(_.username),
               "draws" -> game.getGameStatistics.draws.map(_.username),
-              "date" -> new DateTime().toString()
+              "date" -> game.finishedDate
             )
         })
       }

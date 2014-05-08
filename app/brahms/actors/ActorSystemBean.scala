@@ -4,7 +4,8 @@ import javax.inject.{Inject, Named}
 import akka.actor._
 import org.springframework.context.ApplicationContext
 import javax.annotation.PreDestroy
-
+import brahms.util.Async
+import scala.concurrent.duration._
 /**
  * An Akka Extension which holds the ApplicationContext for creating actors from bean templates.
  */
@@ -34,11 +35,11 @@ class ActorSystemBean @Inject() (ctx: ApplicationContext) {
 
   lazy val gameManager = system.actorOf(Props(SpringExt(system).ctx.getBean(classOf[GameManager])))
 
-//  system.scheduler.schedule(
-//    initialDelay = (1 minute),
-//    interval = (30 seconds),
-//    receiver = gameManager,
-//    message = CheckTimeout
-//  )(Async.context)
+  system.scheduler.schedule(
+    initialDelay = (1 minute),
+    interval = (30 seconds),
+    receiver = gameManager,
+    message = CheckTimeout
+  )(Async.context)
 
 }
