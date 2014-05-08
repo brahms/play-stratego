@@ -54,7 +54,8 @@ angular.module('app.stratego.invoker', [])
             )
             defer.promise
         stop: ->
-            @_onInterval = () ->
+            @_pendingInterval = () ->
+            @_actionInterval = () ->
 
         _updateActionId: (data) ->
 

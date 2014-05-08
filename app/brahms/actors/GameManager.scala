@@ -8,6 +8,7 @@ import brahms.util.{Async, WithLogging}
 import brahms.database.{GameRepository, UserRepository}
 import brahms.model.stratego.{StrategoAction, StrategoGame}
 import brahms.serializer.Serializer
+import org.joda.time.DateTime
 
 case class CreateGame(user: User, gameType: String)
 case class CancelGame(user: User)
@@ -102,8 +103,18 @@ class GameManager @Inject() (userRepo: UserRepository, gameRepo: GameRepository)
                 logger.debug("Action is legal, invoking: {}", action)
                 action.invoke(game)
                 logger.debug("Invoked {}", action)
+
+                if (game.isGameOver) {
+                  logger.info("Game is over")
+                  val gameStats = game.getGameStatistics
+                  userRepo.updateUserStats(gameStats)
+                }
+
                 logger.debug("Saving invoked game: {}", game.id)
+                game.finishedDate = new DateTime()
                 gameRepo.save(game)
+
+
                 sender ! InvokeActionSucceeded
               }
               else {
@@ -119,8 +130,11 @@ class GameManager @Inject() (userRepo: UserRepository, gameRepo: GameRepository)
           logger.warn("Failed: User is not currently in a game")
           sender ! Failed("User is not currently in a game")
       }
+
     case CheckTimeout =>
+
       logger.debug("Checking for timeouts")
+
       val timeoutCheck = System.currentTimeMillis()
       gameRepo.findPending.foreach { game =>
         game.timeouts.foreach { case (username: String, timeout: Long) =>
@@ -143,8 +157,9 @@ class GameManager @Inject() (userRepo: UserRepository, gameRepo: GameRepository)
                 logger.warn(s"$user timed out in game $game")
                 game.handleTimeout(user)
                 assert(game.isGameOver)
+                game.finishedDate = new DateTime()
                 gameRepo.save(game)
-                val stats = game.gameStats
+                val stats = game.getGameStatistics
                 userRepo.updateUserStats(stats)
               }
           }

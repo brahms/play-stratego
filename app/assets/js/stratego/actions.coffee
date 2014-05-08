@@ -25,6 +25,8 @@ angular.module('app.stratego.actions', ['app.stratego.pieces'])
             when 'ReplacePieceAction' then action = new ReplacePieceAction({})
             when 'AttackAction' then action = new AttackAction({})
             when 'CommitAction' then action = new CommitAction({})
+            when 'DrawAction' then action = new DrawAction({})
+            when 'WinAction' then action = new WinAction({})
         action.fromJson(json)
         action
 
@@ -199,6 +201,32 @@ angular.module('app.stratego.actions', ['app.stratego.pieces'])
         toString: ->
             "CommitAction[user: #{@user?.username}]"
 
+    class WinAction extends StrategoAction
+        constructor: ->
+        apply: (board) ->
+            d = Q.defer(); d.resolve()
+            log.debug("#{@}")
+
+            d.promise
+        toJson: (json) -> {"type":"CommitAction"}
+        fromJson: (json) ->
+            @user = json.user
+            @reason = json.reason
+
+        toString: ->
+            "WinAction[user: #{@user?.username}, reason: #{@reason}]"
+
+    class DrawAction extends StrategoAction
+        constructor: ->
+        apply: (board) ->
+            d = Q.defer(); d.resolve()
+            log.debug("#{@}")
+        fromJson: (json) -> 
+            @user - json.user
+            @reason = json.reason
+        toString: ->
+            "DrawAction[user: #{@user?.username}, reason: #{@reason}]"
+ 
     {
         StrategoAction: StrategoAction
         MoveAction: MoveAction
@@ -206,6 +234,8 @@ angular.module('app.stratego.actions', ['app.stratego.pieces'])
         ReplacePieceAction: ReplacePieceAction
         PlacePieceAction: PlacePieceAction
         CommitAction: CommitAction
+        WinAction: WinAction
+        DrawAction: DrawAction
     }
 
 ])

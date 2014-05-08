@@ -43,6 +43,17 @@ class AbstractController extends Controller with WithLogging with Async{
         case Left(other: Throwable)       => throw other
       }
     }
+    def admin(block: AuthenticatedRequest[String] => Future[SimpleResult]) = Action.async(parse.tolerantText) {
+      request: Request[String] =>
+        invokeBlock(request, {
+          implicit authRequest: AuthenticatedRequest[String] =>
+            if (authRequest.user.isAdmin)
+              block(authRequest)
+            else
+              Future.successful(Results.Forbidden("Not the droids you were looking for."))
+        })
+    }
+
 
     def text(block: AuthenticatedRequest[String] => Future[SimpleResult]) = Action.async(parse.tolerantText) {
       request: Request[String] =>

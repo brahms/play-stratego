@@ -143,6 +143,15 @@ object StrategoTypes extends WithLogging {
     def char: Char
 
     def mask: StrategoPiece
+
+    def isMoveable: Boolean = {
+      value match {
+        case FLAG_12 | BOMB_11 =>
+          false
+        case _ =>
+          true
+      }
+    }
   }
 
   class RedPiece @JsonCreator()(value: Int) extends StrategoPiece(value) {

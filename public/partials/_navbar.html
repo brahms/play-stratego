@@ -2,10 +2,11 @@
             <ul class="nav nav-pills pull-right">
                 <li ng-class="{active: isActive('/app')}"><a ng-href="/app">Play</a>
                 </li>
-                <li ng-class="{active: isActive('/app/history')}" ng-show="loggedIn">
-                    <a ng-href="/app/history">History</a>
+                <li ng-class="{active: isActive('/app/leaderboard')}" ng-show="loggedIn">
+                    <a ng-href="/app/leaderboard">Leaderboard</a>
                 </li>
-                <li ng-class="{active: isActive('/app/about')}"><a ng-href="/app/about">About</a>
+                <li ng-class="{active: isActive('/app/replays')}" ng-show="loggedIn">
+                    <a ng-href="/app/replays">Replays</a>
                 </li>
                 <li ng-class="{active: isActive('/app/admin')}" ng-show="loggedIn && user.admin"><a ng-href="/app/admin">Admin</a>
                 </li>

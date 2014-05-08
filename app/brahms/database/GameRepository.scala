@@ -16,6 +16,7 @@ trait GameRepository {
   def exists(id: String) : Boolean
   def save[S <: Game](entity: S): S
   def save[S <: Game](entities: Iterable[S]): Unit
-  def findRunning: Seq[Game];
+  def findRunning: Seq[Game]
   def findAll(): Seq[Game]
+  def findFinished: Seq[Game]
 }

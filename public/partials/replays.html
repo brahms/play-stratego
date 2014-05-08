@@ -1,0 +1,21 @@
+<table class="table .table-striped" ng-if="!replayId">
+    <tr>
+        <th>Date</th>
+        <th>Players</th>
+        <th>Winners</th>
+        <th>Losers</th>
+        <th>Replay</th>
+    </tr>
+    <tr ng-repeat="game in games">
+        <td>{{game.date}}</td>
+        <td>{{game.players}}</td>
+        <td>{{game.winners}}</td>
+        <td>{{game.losers}}</td>
+        <td><button type="button" class="btn btn-primary" ng-click="$parent.replayGame(game.id)">Replay Game</button></td>
+    </tr>
+</table>
+
+
+<div ng-if="replayId">
+    <div class="canvas" id="replayCanvas"></div>
+</div>

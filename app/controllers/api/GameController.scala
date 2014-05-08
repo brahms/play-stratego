@@ -15,6 +15,7 @@ import akka.pattern.ask
 import scala.concurrent.duration._
 import play.api.libs.concurrent.Execution.Implicits._
 import brahms.model.stratego.{StrategoGame, StrategoAction}
+import org.joda.time.DateTime
 
 
 @Singleton
@@ -49,7 +50,7 @@ class GameController extends AbstractController with InitializingBean {
   def getGames = Authenticated.async {
     implicit request =>
       async {
-        JsonResponse.ok(gameRepo.findPending)
+        JsonResponse.ok(gameRepo.findPending.toArray)
       }
   }
 
@@ -150,7 +151,7 @@ class GameController extends AbstractController with InitializingBean {
     implicit request =>
       request.user.getCurrentGameId match {
         case Some(gameId) =>
-          notAsync(JsonResponse.bad("Already have a current game id: " + gameId.toString))
+          notAsync(JsonResponse.bad("Already have a current game id: " + gameId))
         case _ =>
           val js = request.body
           (js \ "type").as[String] match {
@@ -176,6 +177,23 @@ class GameController extends AbstractController with InitializingBean {
           JsonResponse.ok(request.user)
         case _ =>
           JsonResponse.ok("Not in a game")
+      }
+  }
+
+  def replays = Authenticated.async {
+    implicit request =>
+      async {
+        JsonResponse.ok(gameRepo.findFinished.map {
+          game =>
+            Map (
+              "id" -> game.id,
+              "players" -> game.getGameStatistics.players.map(_.username),
+              "winners" -> game.getGameStatistics.winners.map(_.username),
+              "losers" -> game.getGameStatistics.losers.map(_.username),
+              "draws" -> game.getGameStatistics.draws.map(_.username),
+              "date" -> new DateTime().toString()
+            )
+        })
       }
   }
 }

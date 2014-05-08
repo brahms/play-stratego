@@ -196,10 +196,48 @@ angular.module('app.controllers', ['ngRoute', 'app.stratego', 'ui.bootstrap'])
                 scope.ctrl = 'GameHistoryCtrl'
 
     ])
-    .controller('PlayerStatisticsCtrl', ['$scope', '$log', '$http', 
-        class PlayerStatisticsCtrl
+    .controller('LeaderboardCtrl', ['$scope', '$log', '$http', 
+        class LeaderboardCtrl
             constructor: (scope, log, http) ->
-                scope.ctrl = 'PlayerStatisticsCtrl'
+                scope.ctrl = 'LeaderboardCtrl'
+                http({
+                    url: "/api/leaderboard"
+                }).success((users) =>
+                    log.debug("LeaderboardCtrl: success")
+                    scope.users = users
+                )
+    ])
+    .controller('ReplaysCtrl', ['$scope', '$log', '$http', 'StrategoFactory',
+        class ReplaysCtrl
+            constructor: (scope, log, http, StrategoFactory) ->
+                replayer = null
+                scope.games = []
+                scope.ctrl = 'ReplaysCtrl'
+                scope.replayId = null
+                scope.replayGame = (id) ->
+                    log.debug("Replay: " + id)
+                    scope.replayId = id
+                    replayer = new StrategoFactory.StrategoReplayer(id)
+                    replayer.start()
+                    
+                http({
+                    url: "/api/games/replays"
+                }).success((games) =>
+                    log.debug("ReplaysCtrl: success")
+                    scope.games = []
+                    games.forEach (game) ->             
+
+                        scope.games.push({
+                            players: game.players.join(', ')
+                            winners: game.winners.join(', ')
+                            draws: game.draws.join(', ')
+                            id: game.id
+                            losers: game.losers.join(',')
+                            date: moment(game.date).format("LLL")
+                        })
+
+                        log.debug("Games are: #{angular.toJson(scope.games)}")
+                )
     ])
     .controller('AdminCtrl', ['$scope', '$log', '$http',
         class AdminCtrl

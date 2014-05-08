@@ -119,4 +119,8 @@ class MongoGameRepository @Inject()(jongo: Jongo) extends AbstractMongoRepositor
   override def findAll(): Seq[Game] = {
     games.find().as(classOf[Game]).asScala.toSeq
   }
+
+  override def findFinished: Seq[Game] = {
+    games.find("{state: #}", GameState.FINISHED.toString).as(classOf[Game]).asScala.toSeq
+  }
 }

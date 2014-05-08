@@ -793,5 +793,4 @@ class StrategoGameTest extends FunSuite {
     assert(true)
   }
 
-
 }

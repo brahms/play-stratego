@@ -6,7 +6,8 @@ angular.module('app.stratego', [
     'app.stratego.actions',
     'app.stratego.controller',
     'app.stratego.sideboards',
-    'app.stratego.invoker'
+    'app.stratego.invoker',
+    'app.stratego.replayer'
 ]).factory('StrategoFactory', [
     '$log', 
     '$http', 
@@ -15,12 +16,13 @@ angular.module('app.stratego', [
     'StrategoSquare',
     'StrategoActions',
     'StrategoController',
-(log, http, StrategoPieces, StrategoBoard, StrategoSquare, StrategoActions, StrategoController) ->
+    'StrategoReplayer',
+(log, http, StrategoPieces, StrategoBoard, StrategoSquare, StrategoActions, StrategoController, StrategoReplayer) ->
 
 
     return {
             StrategoController: StrategoController
-            StrategoBoard: StrategoBoard
+            StrategoReplayer: StrategoReplayer
         }
 
 ])

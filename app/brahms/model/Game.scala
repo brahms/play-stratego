@@ -8,6 +8,7 @@ import brahms.model.stratego.StrategoGame
 import scala.concurrent.duration._
 import scala.collection.mutable
 import org.jongo.marshall.jackson.oid
+import org.joda.time.DateTime
 
 object Game {
   val TIMEOUT = (60 seconds).toMillis
@@ -22,6 +23,8 @@ abstract class Game {
   @Id
   @ObjectId
   var id : String = _;
+
+  var finishedDate: DateTime = _
 
   def setId(id: String) : Unit = this.id = id
   def getId = id
@@ -40,7 +43,7 @@ abstract class Game {
    * When the game is over, this should return the players who won, lost and drawed
    * @return
    */
-  def gameStats: GameStats
+  def getGameStatistics: GameStats
 
   /**
    * A map of when a users to when they should timeout

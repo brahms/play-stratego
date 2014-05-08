@@ -1,0 +1,14 @@
+<table class="table .table-striped">
+    <tr>
+        <th>Players</th>
+        <th>Wins</th>
+        <th>Losses</th>
+        <th>Draws</th>
+    </tr>
+    <tr ng-repeat="user in users">
+        <td>{{user.username}}</td>
+        <td>{{user.wins}}</td>
+        <td>{{user.losses}}</td>
+        <td>{{user.drawn}}</td>
+    </tr>
+</table>

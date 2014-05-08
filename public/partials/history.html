@@ -1,1 +1,11 @@
-history contentdslkfkljsdf
+<div ng-if="replayId">
+    <ng-include src="templateUrls.replayGame">
+    </ng-include>
+</div>
+<div ng-if="!replayId">
+    <ng-include src="templateUrls.gameHistory">
+    </ng-include>
+
+    <ng-include src="templateUrls.playerStats">
+    </ng-include>
+</div>

@@ -80,6 +80,7 @@ object StrategoActions {
           game.swapPlayer
           logger.trace(s"$user moves ${game.getPiece(newX, newY)} from $x, $y to $newX, $newY")
           super.invoke(game)
+
       }
     }
   }
@@ -109,6 +110,7 @@ object StrategoActions {
           defender = game.board(newX)(newY).asInstanceOf[StrategoPiece]
           result = defender.ifAttackedBy(attacker)
           logger.trace(s"$user has $attacker attacking $defender and $result")
+          var killedFlag: Boolean = false
           result match {
             case BOTH_DIE =>
               game.killPiece(x, y)
@@ -116,17 +118,38 @@ object StrategoActions {
             case ATTACKER_DIES =>
               game.killPiece(x, y)
             case DEFENDER_DIES =>
-              val killedFlag = game.killPiece(newX, newY)
+              killedFlag = game.killPiece(newX, newY)
               game.movePiece(x, y, newX, newY)
-              if (killedFlag) {
-                logger.info(s"$user has won the StrategoGame!")
-                game.state = GameState.FINISHED
-                game.winningPlayer = Some(user)
-              }
           }
 
           game.swapPlayer
           super.invoke(game)
+
+          if (killedFlag) {
+            val action = WinAction(WinReason.CAPTURED_FLAG).withUser(user)
+            action.invoke(game)
+          }
+          else {
+
+            val redCannotMove = !game.checkPlayerCanMove(true)
+            val blueCannotMove = !game.checkPlayerCanMove(false)
+            if (redCannotMove && blueCannotMove) {
+              logger.debug("Both red and blue cannot move")
+              val action = DrawAction(DrawReason.BOTH_PLAYERS_CANNOT_MOVE).withUser(game.redPlayer)
+              action.invoke(game)
+            }
+            else if (redCannotMove) {
+              logger.debug("Red cannot move")
+              val action = WinAction(WinReason.OPPONENT_CANT_MOVE).withUser(game.redPlayer)
+              action.invoke(game)
+            }
+            else if (blueCannotMove) {
+              logger.debug("Blue cannot move")
+              val action = WinAction(WinReason.OPPONENT_CANT_MOVE).withUser(game.bluePlayer)
+              action.invoke(game)
+            }
+          }
+
       }
     }
 
@@ -278,20 +301,21 @@ object StrategoActions {
       game match {
         case game: StrategoGame =>
 
-          if (outOfBounds(x, y)) return false
-          if (outOfBounds(newX, newY)) return false
-          if (game.phase != StrategoPhase.PLACE_PIECES) return false;
+          if (outOfBounds(x, y)) return illegal("out of bounds old pos")
+          if (outOfBounds(newX, newY)) return illegal("out of bounds new pos")
+          if (game.phase != StrategoPhase.PLACE_PIECES) return illegal("not in the place pieces phase")
+          if (game.state != GameState.RUNNING) return illegal("not in the running state")
           game.board(x)(y) match {
             case piece: StrategoPiece =>
               if (!game.sameUser(user, piece))
-                return false
+                return illegal("not same user")
               piece match {
                 case piece: BluePiece =>
-                  if (!game.isOnBlueSide(newX, newY)) return false
+                  if (!game.isOnBlueSide(newX, newY)) return illegal("not on blue side")
 
                   true
                 case piece: RedPiece =>
-                  if (!game.isOnRedSide(newX, newY)) return false
+                  if (!game.isOnRedSide(newX, newY)) return illegal("not on red side")
 
                   true
               }
@@ -303,6 +327,7 @@ object StrategoActions {
     }
 
   }
+
   case class CommitAction() extends StrategoAction {
     /**
      * Checks if this commit action is legal, meaning the player isn't already commited
@@ -315,17 +340,13 @@ object StrategoActions {
         case game: StrategoGame =>
 
           if (game.phase != StrategoPhase.PLACE_PIECES) {
-            logger.debug("Failing on clause 1, game phase is: {}", game.phase)
-            return false
+            return illegal("Failing on clause 1, game phase is: " + game.phase)
           }
           if (game.bluePlayer.equals(user) && (game.bluePlayerReady || !game.blueSideboard.forall(_.isEmpty))) {
-            logger.debug(s"Failing on clause 2, bluePlayerEqualsUser: ${game.bluePlayer.equals(user)} bluePlayerReady: ${game.bluePlayerReady} !game.blueSideboard.forall(_.isEmpty)): ${!game.blueSideboard.forall(_.isEmpty)}")
-            return false
+            return illegal(s"Failing on clause 2, bluePlayerEqualsUser: ${game.bluePlayer.equals(user)} bluePlayerReady: ${game.bluePlayerReady} !game.blueSideboard.forall(_.isEmpty)): ${!game.blueSideboard.forall(_.isEmpty)}")
           }
           if (game.redPlayer.equals(user) && (game.redPlayerReady || !game.redSideboard.forall(_.isEmpty))) {
-            logger.debug(s"Failing on clause 3, redPlayerEqualsUser: ${game.redPlayer.equals(user)} redPlayerReady: ${game.redPlayerReady} !game.redSideboard.forall(_.isEmpty)): ${!game.redSideboard.forall(_.isEmpty)}")
-
-            return false
+            return illegal(s"Failing on clause 3, redPlayerEqualsUser: ${game.redPlayer.equals(user)} redPlayerReady: ${game.redPlayerReady} !game.redSideboard.forall(_.isEmpty)): ${!game.redSideboard.forall(_.isEmpty)}")
           }
           true
       }
@@ -351,6 +372,39 @@ object StrategoActions {
           logger.trace(s"$user commits his piece placement")
           super.invoke(game)
       }
+    }
+  }
+
+  case class WinAction(reason: WinReason) extends StrategoAction {
+    override def isLegal(game: Game): Boolean =
+      illegal(s"shouldn't be able to pass it up")
+
+
+    override def invoke(game: Game): Unit = {
+      game match {
+        case game: StrategoGame =>
+          logger.info(s"$user has won the StrategoGame due to $reason!")
+          game.setWinningPlayer(Some(user.toSimpleUser))
+          if (game.redPlayer.equals(user)) {
+            game.setLosingPlayer(Some(game.bluePlayer))
+          }
+          else {
+            game.setLosingPlayer(Some(game.redPlayer))
+          }
+
+          game.setState(GameState.FINISHED)
+          super.invoke(game)
+      }
+    }
+  }
+
+  case class DrawAction(reason: DrawReason) extends StrategoAction {
+    override def isLegal(game: Game): Boolean = illegal("cannot pass up a draw action")
+
+    override def invoke(game: Game): Unit = {
+      logger.info(s"Game has drawn due to $reason")
+      game.state = GameState.FINISHED
+      super.invoke(game)
     }
   }
 

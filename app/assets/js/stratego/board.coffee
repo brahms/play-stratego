@@ -107,11 +107,6 @@ angular.module('app.stratego.board', ['app.stratego.square',
             @bluePlayerReady = false
             @redPlayerReady = false
 
-            # @stage.on 'click', () =>
-            #     x = @stage.getPointerPosition().x #- bgImage.getPosition().x;
-            #     y = @stage.getPointerPosition().y #- bgImage.getPosition().y;
-            #     log.debug "#{x}, #{y}"
-
             promises.push @_createBackgroundImage()
             promises.push @_createSquares()
             promises.push @_createSideboards(@isRed)

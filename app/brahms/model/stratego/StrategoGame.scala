@@ -5,26 +5,25 @@ import scala.beans.{BooleanBeanProperty, BeanProperty}
 import scala.collection.mutable
 import brahms.model.stratego.StrategoTypes._
 import scala.reflect.ClassTag
-import brahms.util.WithLogging
 import scala.util.control.Breaks._
-import com.fasterxml.jackson.annotation.{JsonView, JsonProperty, JsonIgnore}
-import brahms.serializer.JsonViews._
+import com.fasterxml.jackson.annotation.{JsonIgnore, JsonView}
 import brahms.serializer.{Serializer, JsonViews}
 import brahms.model.stratego.StrategoTypes.Boundary
 import brahms.model.stratego.StrategoTypes.Empty
-import org.joda.time.DateTime
-import brahms.model.stratego.StrategoAction
+import brahms.model.stratego.StrategoActions.{WinAction, DrawAction}
+import java.beans.Transient
+import org.slf4j.LoggerFactory
+import scala.concurrent.duration._
 
-object StrategoGame extends WithLogging {
-
-}
 
 /**
  * Encapsulates the current state of the board
  */
 class StrategoGame extends Game {
 
-  import StrategoGame.logger
+  @JsonIgnore
+  @Transient
+  val logger = LoggerFactory.getLogger(getClass)
   /**
    * Our board is really just a 2d matrix of StrategoTypes
    */
@@ -143,7 +142,7 @@ class StrategoGame extends Game {
   }
 
   /**
-   * Kills a piece, removing it from the x,y coord and putting it back in the sideboard
+   * Kills a piece, removing it from the x,y coord and putting it back in the sideboard, returns true if flag was killed
    * @param x
    * @param y
    */
@@ -243,6 +242,11 @@ class StrategoGame extends Game {
     board(7)(6) = Boundary()
     board(8)(5) = Boundary()
     board(8)(6) = Boundary()
+    val time = System.currentTimeMillis()
+    timeouts = Map(
+      redPlayer.username -> (time + (10 minutes).toMillis),
+      bluePlayer.username -> (time + (10 minutes).toMillis)
+    )
   }
 
   /**
@@ -488,7 +492,7 @@ class StrategoGame extends Game {
   override def handleTimeout(user: User): Unit = {
     getState match {
       case GameState.PENDING =>
-        logger.debug("Timeout for stratego game in the pending state {}", this)
+        logger.error("Timeout for stratego game in the pending state {}", this)
       case GameState.RUNNING =>
         losingPlayer = Some(user)
         if (losingPlayer.equals(redPlayer)) {
@@ -498,8 +502,11 @@ class StrategoGame extends Game {
           winningPlayer = Some(redPlayer)
         }
         logger.debug(s"Timeout for $losingPlayer, forfeits. $winningPlayer wins!")
+        WinAction(WinReason.OPPONENT_TIMED_OUT).withUser(winningPlayer.get).invoke(this)
       case GameState.FINISHED =>
         logger.error("Handle timeout called when game was already finished")
+      case GameState.CANCELED =>
+        logger.error("Handle timeout called when game was already canceled")
     }
 
     setState(GameState.FINISHED)
@@ -510,17 +517,63 @@ class StrategoGame extends Game {
    * When the game is over, this should return the players who won, lost and drawed
    * @return
    */
-  override def gameStats: GameStats = {
+  override def getGameStatistics: GameStats = {
     if (state == GameState.FINISHED) {
-        GameStats(
-          players = Seq(redPlayer.toSimpleUser, bluePlayer.toSimpleUser),
-          winners =  Seq(winningPlayer.get.toSimpleUser),
-          losers = Seq(losingPlayer.get.toSimpleUser),
-          game = this
-        )
+      actionList.last match {
+        case WinAction(reason) =>
+          logger.debug("Generating game stats for Win: " + reason)
+          GameStats(
+            players = Seq(redPlayer.toSimpleUser, bluePlayer.toSimpleUser),
+            winners =  Seq(winningPlayer.get.toSimpleUser),
+            losers = Seq(losingPlayer.get.toSimpleUser),
+            game = this
+          )
+        case DrawAction(reason) =>
+          logger.debug("Generating game stats for Draw: " + reason)
+          GameStats(
+            players = players,
+            game = this,
+            draws = players
+          )
+      }
     }
     else {
       throw new IllegalArgumentException("GameStats called on non finished game")
     }
+  }
+
+
+  def checkPlayerCanMove(checkRedPlayer: Boolean): Boolean = {
+    (1 to 10).foreach { x =>
+      (1 to 10).foreach { y=>
+          val top = board(x)(y+1)
+          val right = board(x+1)(y)
+          val bottom = board(x)(y-1)
+          val left = board(x-1)(y)
+          board(x)(y) match {
+            case piece: RedPiece if piece.isMoveable && checkRedPlayer=>
+              if (top.isInstanceOf[BluePiece] || top.isInstanceOf[Empty] ||
+                  right.isInstanceOf[BluePiece] || right.isInstanceOf[Empty] ||
+                  bottom.isInstanceOf[BluePiece] || bottom.isInstanceOf[Empty] ||
+                  left.isInstanceOf[BluePiece] || left.isInstanceOf[Empty]) {
+                return true
+              }
+            case piece: BluePiece if piece.isMoveable && !checkRedPlayer=>
+              if (top.isInstanceOf[RedPiece] || top.isInstanceOf[Empty] ||
+                  right.isInstanceOf[RedPiece] || right.isInstanceOf[Empty] ||
+                  bottom.isInstanceOf[RedPiece] || bottom.isInstanceOf[Empty] ||
+                  left.isInstanceOf[RedPiece] || left.isInstanceOf[Empty]) {
+                return true
+              }
+            case _ =>
+          }
+      }
+    }
+    false
+  }
+
+  def getOtherPlayer(user: User): User = {
+    if (user.equals(redPlayer)) return bluePlayer
+    redPlayer
   }
 }

@@ -3,22 +3,19 @@
     <button ng-click="createGame()" class="btn-primary btn" >Create Game</button>
 
     <div ng-if="shownGames.length > 0" >
-    <h4>Play an existing game</h4>
-    <div class="games-list" >
-
-            <div class="row game" ng-repeat="game in shownGames | limitTo: totalGames" class="list-group-item">
-
-                <div style="float: left;" class="left">
-                    <p>Creator: {{game.creator.username}}</p>
-                    <p style="padding-left: 10px">Type: {{game.type}}</p>
-                    <a style="padding-left: 10px" href="#" ng-click="$parent.playGame(game._id)">PLAY</a>
-                </div>
-            </div>
-
-
-        </div>
-        <!-- Pagination -->
-        <!-- <pagination class="dontselect" max-size="limitPages" items-per-page="gamesPerPage" boundary-links="true" total-items="totalGames" page="currentPage"></pagination> -->
+        <h4>Play an existing game</h4>
+        <table class="table .table-striped">
+            <tr>
+                <th>Creator</th>
+                <th>Type</th>
+                <th>Play</th>
+            </tr>
+            <tr ng-repeat="game in shownGames | limitTo: totalGames ">
+                <td>{{game.creator.username}}</td>
+                <td>{{game.type}}</td>
+                <td><button type="button" class="btn btn-primary" ng-click="$parent.playGame(game._id)">PLAY</button></td>
+            </tr>
+        </table>
     </div>
 
     <div ng-if="shownGames.length == 0">

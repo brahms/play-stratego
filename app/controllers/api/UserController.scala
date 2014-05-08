@@ -40,4 +40,20 @@ class UserController extends AbstractController {
       JsonResponse.priv(request.user)
   }
 
+  def leaderboard = Authenticated.async {
+    implicit request =>
+      async {
+        JsonResponse.ok(userRepo.findAll().sortBy(_.wonGames.size).reverse.map {
+          user =>
+            Map (
+              "username" -> user.username,
+              "played" -> user.playedGames.size,
+              "wins" -> user.wonGames.size,
+              "losses" -> user.lostGames.size,
+              "drawn" -> user.drawnGames.size
+            )
+        })
+      }
+  }
+
 }

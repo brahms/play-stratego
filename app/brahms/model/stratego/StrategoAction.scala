@@ -1,11 +1,13 @@
 package brahms.model.stratego
 
-import com.fasterxml.jackson.annotation.{JsonTypeInfo, JsonSubTypes}
+import com.fasterxml.jackson.annotation.{JsonIgnore, JsonTypeInfo, JsonSubTypes}
 import scala.beans.BeanProperty
 import brahms.model.{Game, GameAction, User}
 import com.fasterxml.jackson.annotation.JsonSubTypes.Type
 import brahms.model.stratego.StrategoTypes.StrategoPiece
 import brahms.util.WithLogging
+import scala.concurrent.duration._
+import org.joda.time.DateTime
 
 @JsonTypeInfo(use=JsonTypeInfo.Id.NAME, include=JsonTypeInfo.As.PROPERTY, property="type")
 @JsonSubTypes(Array(
@@ -13,17 +15,33 @@ import brahms.util.WithLogging
   new Type(value=classOf[StrategoActions.PlacePieceAction], name="PlacePieceAction"),
   new Type(value=classOf[StrategoActions.AttackAction], name="AttackAction"),
   new Type(value=classOf[StrategoActions.ReplacePieceAction], name="ReplacePieceAction"),
+  new Type(value=classOf[StrategoActions.WinAction], name="WinAction"),
+  new Type(value=classOf[StrategoActions.DrawAction], name="DrawAction"),
   new Type(value=classOf[StrategoActions.CommitAction], name="CommitAction")))
 abstract class StrategoAction extends GameAction with WithLogging {
+  @JsonIgnore
+  val TIMEOUT_DURATION = (1 minute).toMillis
+
   override def isLegal(game: Game): Boolean
   override def invoke(game: Game) : Unit = {
     game match {
       case game: StrategoGame =>
         game.actionList += this
         setActionId(game.actionList.size)
+
+        if (game.phase == StrategoPhase.RUNNING) {
+          val timeoutForOtherUser = (TIMEOUT_DURATION+System.currentTimeMillis())
+          game.timeouts = Map(game.getOtherPlayer(user).username -> timeoutForOtherUser)
+          logger.debug("Setting timeout for other player to : " + new DateTime(timeoutForOtherUser))
+        }
       case _ =>
         throw new IllegalArgumentException("Invalid game passed into invoke")
     }
+  }
+
+  def illegal(reason: String): Boolean = {
+    logger.warn(s"$this illegal move due to $reason")
+    false
   }
 
 

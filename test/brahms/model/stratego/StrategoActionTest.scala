@@ -2,13 +2,12 @@ package brahms.model.stratego
 
 import org.scalatest.{BeforeAndAfter, FunSuite}
 import brahms.model.stratego.StrategoActions._
-import brahms.model.{GameAction, User}
+import brahms.model.{GameState, User}
 import brahms.model.stratego.StrategoTypes._
 import brahms.serializer.Serializer
 import brahms.model.stratego.StrategoActions.MoveAction
 import brahms.model.stratego.StrategoActions.AttackAction
 import brahms.model.stratego.StrategoActions.PlacePieceAction
-import org.bson.types.ObjectId
 
 class StrategoActionTest extends FunSuite with BeforeAndAfter {
   val serializer = Serializer.serializer
@@ -272,6 +271,56 @@ class StrategoActionTest extends FunSuite with BeforeAndAfter {
     action.invoke(game)
     assert(!action.isLegal(game))
 
+
+  }
+
+  test("AttackAction - causes win due to blue player cannot move") {
+    game.phase = StrategoPhase.RUNNING
+    game.setPiece(1, 1, new RedPiece(MAJOR_7))
+    game.setPiece(1,2, new BluePiece(MINER_3))
+    var action = AttackAction(1, 1, 1, 2).withUser(redUser)
+    game.state = GameState.RUNNING
+    assert(action.isLegal(game))
+    action.invoke(game)
+    assert(game.isGameOver)
+    assert(game.actionList.last.isInstanceOf[WinAction])
+
+    assertResult(game.actionList.last.asInstanceOf[WinAction].user)(redUser)
+    assertResult(game.actionList.last.asInstanceOf[WinAction].reason)(WinReason.OPPONENT_CANT_MOVE)
+
+  }
+
+
+  test("AttackAction - flag captured") {
+    game.phase = StrategoPhase.RUNNING
+    game.setPiece(1, 1, new RedPiece(MAJOR_7))
+    game.setPiece(1,2, new BluePiece(FLAG_12))
+    var action = AttackAction(1, 1, 1, 2).withUser(redUser)
+    game.state = GameState.RUNNING
+    assert(action.isLegal(game))
+    action.invoke(game)
+    assert(game.isGameOver)
+    assert(game.actionList.last.isInstanceOf[WinAction])
+
+    assertResult(game.actionList.last.asInstanceOf[WinAction].user)(redUser)
+    assertResult(game.actionList.last.asInstanceOf[WinAction].reason)(WinReason.CAPTURED_FLAG)
+
+  }
+
+
+  test("AttackAction - draw") {
+    game.phase = StrategoPhase.RUNNING
+    game.setPiece(1, 1, new RedPiece(MAJOR_7))
+    game.setPiece(1,2, new BluePiece(MAJOR_7))
+    var action = AttackAction(1, 1, 1, 2).withUser(redUser)
+    game.state = GameState.RUNNING
+    assert(action.isLegal(game))
+    action.invoke(game)
+    assert(game.isGameOver)
+    assert(game.actionList.last.isInstanceOf[DrawAction])
+
+    assertResult(game.actionList.last.asInstanceOf[DrawAction].user)(redUser)
+    assertResult(game.actionList.last.asInstanceOf[DrawAction].reason)(DrawReason.BOTH_PLAYERS_CANNOT_MOVE)
 
   }
 
